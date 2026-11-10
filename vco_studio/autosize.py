@@ -82,7 +82,6 @@ class Executor:
         if self.lock_command:
             from .runner import run_bounded
             cmd = list(self.lock_command) + [_launch(), 'simulate', str(dest), '--output', str(out), '--timeout', str(self.timeout_s)]
-            os.environ.setdefault('AHUB_AGENT', 'claude')
             os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
             # bounded: an interrupted campaign terminates the lock holder, which terminates simulate -> spectre
             run_bounded(cmd, dest, self.timeout_s + 7200, dest / 'lock.log')
@@ -604,7 +603,6 @@ def _gain(ex, r, label):
         if ex.lock_command:
             cmd = list(ex.lock_command) + cmd
         from .runner import run_bounded
-        os.environ.setdefault('AHUB_AGENT', 'claude')
         run_bounded(cmd, gen, 3600, gen / 'loopgain-lock.log')
         ex.lg_used += 1
     try:

@@ -6,12 +6,12 @@ Prints per offset: PN, flicker share, closure, contribution by role and by block
 with the removal bound; slopes between offsets; a triage class. --compare puts every input against the
 first one (per-role / per-block PN-contribution deltas) to show which source moved.
 
-Facts this relies on (checked on VCO设计系统 runs, 2026-11-10):
+Facts this relies on (checked on VCO Design Studio runs):
   * Studio PN = 10*log10(2*out^2/amp^2), amp = |V1(OUTP)-V1(OUTN)| (vco_studio/simulator.py parse_result).
   * The per-source 'total' fields sum to out^2 (closure ~1), so share = total/out^2 and a source's
     PN contribution = 10*log10(2*total/amp^2). Removing a source entirely gains at most -10*log10(1-share).
-  * Field names come from the PSF TYPE section and differ by model: BSIM3 rd,rs,id,fn,total (180 nm);
-    BSIM4 rd,rs,rgbi,rbp*,rb*b,id,igs,igd,igb,fn,total (65 nm, trace = instance name, no '.main');
+  * Field names come from the PSF TYPE section and differ by model: BSIM3 rd,rs,id,fn,total;
+    BSIM4 rd,rs,rgbi,rbp*,rb*b,id,igs,igd,igb,fn,total (trace = instance name, no '.main');
     bsource flicker_noise,thermal_noise,total; resistor rn,total; inductor rn,fn,total; diode [rs,]id,total.
     Flicker = fn + flicker_noise; everything else is white (thermal/shot).
 Python: python3 (stdlib only).
