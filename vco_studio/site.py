@@ -142,6 +142,15 @@ def evidence_indexes():
     return out
 
 
+def evidence_failure_files():
+    """Optional user JSONL ledgers of failed attempts, resolved like evidence indexes."""
+    out = []
+    for file in load().get('evidence_failure_files', []):
+        path = resolve(file)
+        out.append(path if path.is_absolute() else ROOT / path)
+    return out
+
+
 def describe():
     s = load()
     return {
@@ -156,4 +165,5 @@ def describe():
         'kb_command': kb_command(),
         'tools': {k: str(tool_path(k)) for k in s['tools']},
         'evidence_indexes': [str(p) for p in evidence_indexes()],
+        'evidence_failure_files': [str(p) for p in evidence_failure_files()],
     }

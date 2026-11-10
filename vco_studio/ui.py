@@ -227,7 +227,7 @@ class StudioApp:
         self.pages.add(tools_page, text='Analysis and outputs')
         ttk.Label(tools_page, text='Analysis uses the generated graph and a new output folder.', wraplength=600).pack(anchor='w')
         toolbar = ttk.Frame(tools_page)
-        toolbars = [('Analyze passive port', 'z11'), ('Export bank workbook', 'caplab'), ('Optimize current controls', 'mco')]
+        toolbars = [('Analyze passive port', 'z11'), ('Export bank workbook', 'caplab'), ('Optimize current controls', 'optimizer')]
         toolbuttons = []
         for label, tool in toolbars:
             button = ttk.Button(toolbar, text=label, command=lambda tool=tool: self.run_tool(tool))
@@ -722,7 +722,7 @@ class StudioApp:
                 options = {'port': ['OUTP', 'OUTN'], 'frequencies_hz': [f0 * factor for factor in (.5, .75, 1, 1.25, 1.5, 2)]}
             elif tool == 'caplab':
                 options = {'port': ['OUTP', 'OUTN']}
-            elif tool == 'mco':
+            elif tool == 'optimizer':
                 low, high, budget = float(self.opt_low.get()), float(self.opt_high.get()), int(self.opt_budget.get())
                 if not 0 < low < high or not 1 <= budget <= 100000:
                     raise ValueError('Provide ordered positive bounds and an integer sample budget')
@@ -744,7 +744,7 @@ class StudioApp:
                 from .characterize import bank_ac
                 return bank_ac(generated, output, cancel_event=cancel, log=log, **options)
             evaluate = None
-            if tool == 'mco':
+            if tool == 'optimizer':
                 from .simulator import evaluate_candidate
                 def evaluate(project, candidate_dir):
                     kwargs = {}
@@ -765,7 +765,7 @@ class StudioApp:
             self.status.set('Task failed or cancelled: ' + str(result.get('outcome', result.get('error', status))))
         elif status == 'measured':
             self.status.set('Selected controls measured; full tuning coverage unqualified')
-        elif result.get('tool') == 'mco' and result.get('best') is None:
+        elif result.get('tool') == 'optimizer' and result.get('best') is None:
             self.status.set('Optimization completed without a feasible candidate')
         else:
             self.status.set('Analysis completed; inspect qualification in the receipt')

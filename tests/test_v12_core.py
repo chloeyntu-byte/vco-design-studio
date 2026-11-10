@@ -270,8 +270,8 @@ if __name__ == '__main__':
 class NoiseAndSpecModeTests(unittest.TestCase):
     PSF = ROOT / 'tests/fixtures/stages_psf/noise.txt'
 
-    @unittest.skipUnless(PSF.is_file(), 'v11 evidence not on this host')
-    def test_noise_contributors_match_c5_audit(self):
+    @unittest.skipUnless(PSF.is_file(), 'Synthetic PSF fixture not available')
+    def test_noise_contributors_match_synthetic_fixture(self):
         from vco_studio.noise import contributors
         c = contributors(self.PSF, 1e6)
         self.assertAlmostEqual(c['classes']['tail']['share'], 0.75, delta=0.01)

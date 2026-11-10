@@ -46,7 +46,7 @@ class FlowTests(unittest.TestCase):
         receipt={'schema':'vco.run.v1','pid':123,'start_epoch':1,'cwd':str(hb)}
         write_json(hb/'receipt.json',receipt)
         duplicate=candidate/'copied-receipt';duplicate.mkdir();write_json(duplicate/'receipt.json',receipt)
-        tool=candidate/'mco';tool.mkdir();write_json(tool/'receipt.json',{'schema':'vco.tool-receipt.v1','tool':'mco'})
+        tool=candidate/'optimizer';tool.mkdir();write_json(tool/'receipt.json',{'schema':'vco.tool-receipt.v1','tool':'optimizer'})
         ac=candidate/'ac';ac.mkdir();write_json(ac/'receipt.json',{'run_dir':str(ac),'argv':['spectre'],'exit_code':1,'input_sha256':'fixture','excitation':0})
         self.state['candidates']=[{'directory':str(candidate),'results':[str(hb/'result.json')]}]
         self.state['budget']={'solver_processes':2}

@@ -41,6 +41,8 @@ export VCO_STUDIO_PYTHON="$(command -v python3.11)"
 ./launch generate ../example-project.json --output ../example-generated
 ```
 
+`data/baselines/class_b/` 保留的是改写后的**合成示例**（`provenance.kind: synthetic_example`），不是实测电路或性能基准；比较须使用用户自己的测量。
+
 输出目录须为新目录或空目录，运行产物须与程序目录分离。
 
 ## 配合 Cadence 使用
@@ -64,6 +66,16 @@ export VCO_STUDIO_PYTHON="$(command -v python3.11)"
 ```
 
 开始设计流程前阅读[入口技能](skills/eda-vco-design/SKILL.md)。`./launch quickstart` 介绍流程命令。用户必须提供自己的实测证据；本版本不附实测查找表或性能排名，空证据返回未知。需要求解器的命令与离线快速开始分开说明。
+
+## 可选集成（Integrations）
+
+Cap Array Lab、Z11 和 **external circuit optimizer（外部电路优化器）** 均为可选外部工具，需用户自备并配置；仓库不附带，离线浏览和生成也不依赖它们。在 `VCO_SITE` 指定的 site JSON 中，用 `tools.caplab`、`tools.z11` 和 `tools.optimizer` 设置兼容源码目录。
+
+- Cap Array Lab 后处理实测双端口 Y 矩阵并导出工作簿；求解器 AC 测量由 Studio 的 `bank-ac` 执行，无源导出本身不是实测数据。
+- Z11 分析静态无源 RLC/互感投影，不代表完整有源振荡器或相噪。
+- 外部电路优化器需兼容的 `circuit_optimizer` 模块和显式 evaluator，后者提供状态、可行性、违例和证据；搜索结果的电气资格由 evaluator 的测量决定。
+
+用 `./launch site` 查看已配置的工具目录。缺少工具仅影响对应可选功能，不影响离线快速开始。工具路径与可选知识/证据输入见[配置说明](docs/BINDINGS.md)。
 
 ## 限制
 

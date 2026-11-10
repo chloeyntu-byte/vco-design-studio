@@ -737,7 +737,7 @@ def deliver(task, provisional=False, output=None, candidate=None):
         decisions = (root / 'DECISIONS.md').read_text() if (root / 'DECISIONS.md').is_file() else 'No DECISIONS.md recorded.'
         unresolved = list(state.get('unresolved', []))
         if not freeze:
-            unresolved.append('未冻结：采用候选为最后登记候选；代码为已测点（没有已测点时仅列端点计划）。')
+            unresolved.append('Unfrozen: delivery uses the selected or latest non-rejected candidate and measured controls (an endpoint plan if no measurements exist).')
         unresolved += ['%s: %s' % (s, verification[s]['status']) for s in STAGES if verification[s]['status'] != 'done']
         for stage_name, row in verification.items():
             if isinstance(row.get('summary'), str) and Path(row['summary']).is_file():
@@ -777,9 +777,9 @@ def deliver(task, provisional=False, output=None, candidate=None):
         if not freeze:
             for s in ('pvt', 'mc', 'postsim'):
                 commands[s] += ' --candidate %s --codes /path/to/codes.json' % shlex.quote(c['id'])
-        header = '未冻结 — provisional delivery' if not freeze else '# Frozen TT nominal delivery'
+        header = '# Unfrozen — provisional delivery' if not freeze else '# Frozen TT nominal delivery'
         lines = [header, '', 'Candidate: `%s`; qualification: %s' % (c['id'], (freeze or {}).get('scope', 'provisional, not qualified')), '',
-                 '| 规格 | 要求 | 实测 |', '|---|---|---|',
+                 '| Specification | Requirement | Measured |', '|---|---|---|',
                  '| Frequency band (Hz) | %s | %s |' % (state['spec']['frequency_band_hz'], measured_range),
                  '| Power (mW) | <= %s | %s |' % (state['spec']['power_max_mw'], observed.get('power_mw', 'unmeasured'))]
         if state['spec'].get('max_step_hz') is not None:

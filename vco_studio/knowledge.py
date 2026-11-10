@@ -4,8 +4,8 @@ Two layers, one API:
   * curated cards  -- data/knowledge/cards/*.json in this repository: small, structured, executable
                       (conditions + symptom codes + actions + evidence links). Matched deterministically
                       by structured fields, so the flow can push the right card at the right decision point.
-  * knowledge base -- the shared EDA KB (SQLite FTS5 + BGE-M3) for long-tail recall (papers, history,
-                      raw records). Optional: every call degrades gracefully when the KB is absent.
+  * knowledge base -- an optional user-configured search/show command for papers, history and raw records.
+                      Automatic flow consults retain local cards if this backend is unavailable.
 
 Every consult made through a task is appended to <task>/knowledge/consults.jsonl (a receipt), so
 reviews can see what knowledge was used at which stage.
@@ -217,8 +217,8 @@ def consult_log(task_root):
 
 # ----------------------------------------------------------------------------------------- CLI
 def cli_register(sub):
-    c = sub.add_parser('kb', help='knowledge: cards (structured, curated) and the shared KB',
-                       description='knowledge: cards (structured, curated) and the shared KB')
+    c = sub.add_parser('kb', help='knowledge: cards (structured, curated) and an optional user-configured knowledge backend',
+                       description='knowledge: cards (structured, curated) and an optional user-configured knowledge backend')
     ks = c.add_subparsers(dest='kb_command', metavar='<kb-command>')
     ks.required = True
     k = ks.add_parser('cards', help='find curated cards by structured context')
@@ -233,7 +233,7 @@ def cli_register(sub):
     k.add_argument('--task', help='record a consult receipt in this task workspace')
     k = ks.add_parser('show', help='show a card or KB record by id')
     k.add_argument('id')
-    k = ks.add_parser('search', help='text/semantic search in the shared KB')
+    k = ks.add_parser('search', help='text/semantic search in an optional user-configured knowledge backend')
     k.add_argument('query')
     k.add_argument('--mode', default='keyword', choices=['keyword', 'hybrid', 'semantic'])
     k.add_argument('--project')

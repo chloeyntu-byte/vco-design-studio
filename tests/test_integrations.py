@@ -139,22 +139,22 @@ class RealToolTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             api.execute_action(spec)
 
-    def _mco_fixture(self):
+    def _optimizer_fixture(self):
         from vco_studio.catalog import default_project
         from vco_studio.generator import generate
         directory = self.root / 'real-generated'
         generate(default_project('murphy', 'nmos'), directory)
         return directory, [{'parameter_id': 'L_scale', 'minimum': .9, 'maximum': 1.1}]
 
-    @unittest.skipUnless(api.TOOL_ROOTS['mco'].is_dir(), 'Optional external mco tool not configured')
-    def test_mco_actual_failed_evaluator_never_becomes_feasible(self):
+    @unittest.skipUnless(api.TOOL_ROOTS['optimizer'].is_dir(), 'Optional external optimizer tool not configured')
+    def test_optimizer_actual_failed_evaluator_never_becomes_feasible(self):
         import subprocess
-        directory, variables = self._mco_fixture()
+        directory, variables = self._optimizer_fixture()
         def failed_evaluator(project, candidate_dir):
             failed = subprocess.run(['/bin/false'], check=False)
             return {'status': 'failed', 'feasible': False, 'total_violation': 0,
                     'evidence': {'kind': 'intentional_external_failure_fixture', 'returncode': failed.returncode}}
-        receipt = api.optimize(directory, variables, failed_evaluator, self.root / 'failed-mco', budget=2, batch_size=1)
+        receipt = api.optimize(directory, variables, failed_evaluator, self.root / 'failed-optimizer', budget=2, batch_size=1)
         self.assertEqual(receipt['status'], 'failed')
         self.assertIsNone(receipt['best'])
         self.assertIsNone(receipt['best_unqualified'])
@@ -164,30 +164,30 @@ class RealToolTests(unittest.TestCase):
         self.assertTrue(all(row['evaluation_class'] == 'evaluation_failure' and not row['metrics']['feasible'] for row in history))
         self.assertTrue(all(row['metrics']['merit'] is None and row['evidence']['returncode'] != 0 for row in history))
 
-    @unittest.skipUnless(api.TOOL_ROOTS['mco'].is_dir(), 'Optional external mco tool not configured')
-    def test_mco_constraint_failure_is_evaluated_but_not_adoptable(self):
-        directory, variables = self._mco_fixture()
+    @unittest.skipUnless(api.TOOL_ROOTS['optimizer'].is_dir(), 'Optional external optimizer tool not configured')
+    def test_optimizer_constraint_failure_is_evaluated_but_not_adoptable(self):
+        directory, variables = self._optimizer_fixture()
         def evaluator(project, candidate_dir):
             return {'status': 'completed', 'feasible': False, 'total_violation': 2,
                     'merit': 10, 'objectives': [10], 'violations': ['frequency outside target']}
-        receipt = api.optimize(directory, variables, evaluator, self.root / 'infeasible-mco', budget=2, batch_size=1)
+        receipt = api.optimize(directory, variables, evaluator, self.root / 'infeasible-optimizer', budget=2, batch_size=1)
         self.assertEqual(receipt['status'], 'completed')
         self.assertIsNone(receipt['best'])
         self.assertEqual(receipt['best_unqualified']['evaluation_class'], 'constraint_failure')
         self.assertEqual(receipt['completed_evaluations'], 2)
         self.assertEqual(receipt['feasible_evaluations'], 0)
 
-    @unittest.skipUnless(api.TOOL_ROOTS['mco'].is_dir(), 'Optional external mco tool not configured')
-    def test_mco_missing_feasibility_contract_rejected(self):
-        directory, variables = self._mco_fixture()
+    @unittest.skipUnless(api.TOOL_ROOTS['optimizer'].is_dir(), 'Optional external optimizer tool not configured')
+    def test_optimizer_missing_feasibility_contract_rejected(self):
+        directory, variables = self._optimizer_fixture()
         with self.assertRaisesRegex(ValueError, 'explicitly provide'):
             api.optimize(directory, variables, lambda project, path: {'merit': 0},
-                         self.root / 'malformed-mco', budget=1, batch_size=1)
+                         self.root / 'malformed-optimizer', budget=1, batch_size=1)
 
-    def test_mco_requires_explicit_evaluator(self):
+    def test_optimizer_requires_explicit_evaluator(self):
         with self.assertRaisesRegex(ValueError, 'explicit project evaluator'):
-            api.optimize(self.generated, [{'parameter_id': 'c', 'minimum': .1e-12, 'maximum': 2e-12}], None, self.root / 'mco')
-        receipt = json.loads((self.root / 'mco' / 'receipt.json').read_text())
+            api.optimize(self.generated, [{'parameter_id': 'c', 'minimum': .1e-12, 'maximum': 2e-12}], None, self.root / 'optimizer')
+        receipt = json.loads((self.root / 'optimizer' / 'receipt.json').read_text())
         self.assertEqual(receipt['status'], 'failed')
 
     def test_matrix_graph_identity_required(self):

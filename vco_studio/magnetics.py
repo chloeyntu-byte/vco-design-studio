@@ -1,8 +1,8 @@
 """Magnetic-mode quality factor of the explicit (ideal L + R/K) magnetic network at a frequency.
 
-Rule of this stage (docs/RULES.md): the largest standalone magnetic-mode Q at the actual
+Built-in nominal qualification rule: the largest standalone magnetic-mode Q at the actual
 fundamental f0 must be in (0, 30]; the second harmonic is not restricted.
-Method (same as the v11 release audit): Zmag = (inv(Rs + jw*Lmatrix) + diag(1/Rp))^-1 at f0, then
+Method: Zmag = (inv(Rs + jw*Lmatrix) + diag(1/Rp))^-1 at f0, then
 generalized eigenvalues of (Im Zmag, Re Zmag) over all magnetic port modes.
 """
 from __future__ import annotations

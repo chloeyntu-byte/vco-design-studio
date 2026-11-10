@@ -41,6 +41,8 @@ The same example from the CLI:
 ./launch generate ../example-project.json --output ../example-generated
 ```
 
+`data/baselines/class_b/` contains rewritten **synthetic examples** (`provenance.kind: synthetic_example`), not measured circuits or performance references. Use your own measurements for comparisons.
+
 Output directories must be new or empty. Keep runtime outputs outside the program directory.
 
 ## Using with Cadence
@@ -64,6 +66,16 @@ Set `VCO_STUDIO_NATIVE_PROFILE` to a user JSON containing `virtuoso` and, if nee
 ```
 
 Read [the entry skill](skills/eda-vco-design/SKILL.md) before running a design flow. `./launch quickstart` describes the flow commands. Use your own measured evidence; the release includes no measured lookup table or ranking. Empty evidence remains unknown. Solver-dependent commands are documented separately from the offline quick start.
+
+## Integrations
+
+Cap Array Lab, Z11 and an **external circuit optimizer** are optional external tools, supplied and configured by the user; none is bundled or required for offline browsing/generation. Set their compatible source roots under `tools.caplab`, `tools.z11` and `tools.optimizer` in the site JSON selected by `VCO_SITE`.
+
+- Cap Array Lab postprocesses measured two-port Y matrices and exports workbooks. Studio's `bank-ac` performs the solver-based AC measurement; a passive export alone is not measured data.
+- Z11 analyzes a static passive RLC/mutual-inductance projection, not the full active oscillator or its phase noise.
+- The external circuit optimizer requires compatible `circuit_optimizer` modules and an explicit evaluator with status, feasibility, violations and evidence. A search result is electrically qualified only by its evaluator measurements.
+
+Use `./launch site` to inspect configured tool roots. Missing tools make their optional functions unavailable; they do not affect the offline quick start. See [configuration details](docs/BINDINGS.md) for tool paths and optional knowledge/evidence inputs.
 
 ## Limitations
 

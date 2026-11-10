@@ -275,7 +275,7 @@ Path('spectre.log').write_text('Offline PSF replay stub; no circuit was solved.\
         p = self.cli('deliver', self.task, '--provisional')
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         dest = self.task / 'delivery'
-        self.assertTrue((dest / 'report.md').read_text().splitlines()[0].startswith('未冻结'))
+        self.assertTrue((dest / 'report.md').read_text().splitlines()[0].startswith('# Unfrozen'))
         self.assertTrue(read_json(dest / 'delivery.json')['provisional'])
         with self.assertRaises(FileExistsError):
             stages.deliver(self.task, provisional=True)

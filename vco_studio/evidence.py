@@ -1,7 +1,7 @@
 """Small file-based measured evidence index; no inferred universal bounds."""
 import json, math
 from pathlib import Path
-from .common import read_json, sha256, ROOT
+from .common import read_json, sha256
 
 SCHEMA = 'vco.evidence-point.v1'
 
@@ -34,10 +34,9 @@ def load_points(paths):
     return rows
 
 def default_indexes():
-    pointer=ROOT/'data/evidence/index.json'
-    if not pointer.is_file():return []
-    entries=read_json(pointer).get('measurement_files',[])
-    return [str(Path(x) if Path(x).is_absolute() else pointer.parent/x) for x in entries]
+    """Use only explicitly configured user evidence indexes; no bundled measurements."""
+    from .site import evidence_indexes
+    return evidence_indexes()
 
 def audit_convergence(row,hash_cache=None):
     """Normalize a verified claim without discarding a valid observed sample."""
@@ -249,20 +248,21 @@ def compact(out):
 
 
 def failures_near(pdk=None,frequency_hz=None,power_mw=None,architecture=None,frequency_tolerance=.03,power_tolerance=.10):
-    """Published failed/unmeasured attempts near a condition (attempted != infeasible; read failure_class)."""
-    path=ROOT/'data/evidence/v11-qualification/failures.jsonl'
-    if not path.is_file():return []
+    """User-configured failed/unmeasured attempts near a condition (attempted != infeasible; read failure_class)."""
+    from .site import evidence_failure_files
     out=[]
-    for line in path.read_text().splitlines():
-        if not line.strip():continue
-        f=json.loads(line)
-        if pdk and canonical_pdk(f.get('pdk'))!=pdk:continue
-        if architecture and f.get('architecture')!=architecture:continue
-        t=f.get('target') or {}
-        fg=t.get('frequency_ghz');pm=t.get('power_mw')
-        if frequency_hz and fg and abs(fg*1e9/frequency_hz-1)>max(frequency_tolerance,.10):continue
-        if power_mw and pm and abs(pm/power_mw-1)>max(power_tolerance,.25):continue
-        if (frequency_hz and not fg):continue
-        out.append({'run_dir':f.get('run_dir'),'architecture':f.get('architecture'),'variant':f.get('variant'),'target':t,
-                    'failure_class':f.get('failure_class'),'evidence':(f.get('evidence') or '')[:200]})
+    for path in evidence_failure_files():
+        if not path.is_file():continue
+        for line in path.read_text().splitlines():
+            if not line.strip():continue
+            f=json.loads(line)
+            if pdk and canonical_pdk(f.get('pdk'))!=pdk:continue
+            if architecture and f.get('architecture')!=architecture:continue
+            t=f.get('target') or {}
+            fg=t.get('frequency_ghz');pm=t.get('power_mw')
+            if frequency_hz and fg and abs(fg*1e9/frequency_hz-1)>max(frequency_tolerance,.10):continue
+            if power_mw and pm and abs(pm/power_mw-1)>max(power_tolerance,.25):continue
+            if (frequency_hz and not fg):continue
+            out.append({'run_dir':f.get('run_dir'),'architecture':f.get('architecture'),'variant':f.get('variant'),'target':t,
+                        'failure_class':f.get('failure_class'),'evidence':(f.get('evidence') or '')[:200]})
     return out[:10]

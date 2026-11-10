@@ -1,5 +1,5 @@
 #!/bin/sh
-# VCO设计系统 launcher: choose a Python >= 3.11 (env > site profile > PATH) and run the CLI.
+# VCO Design Studio launcher: choose a Python >= 3.11 (env > site profile > PATH) and run the CLI.
 set -eu
 studio_base=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 site_file=${VCO_SITE:-$studio_base/config/site.json}

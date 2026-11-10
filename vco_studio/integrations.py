@@ -1,4 +1,4 @@
-"""Executable adapters to the installed MCO, Cap Array Lab and Z11 engines.
+"""Executable adapters to the installed external circuit optimizer, Cap Array Lab and Z11 engines.
 
 Source tools are imported read-only. Every action requires a generated design,
 an explicit new result directory and a receipt; no existing GUI session is used.
@@ -16,7 +16,7 @@ import threading
 
 def _tool_roots():
     from . import site
-    return {name: site.tool_path(name) or Path('/nonexistent/' + name) for name in ('mco', 'caplab', 'z11')}
+    return {name: site.tool_path(name) or Path('/nonexistent/' + name) for name in ('optimizer', 'caplab', 'z11')}
 
 
 TOOL_ROOTS = _tool_roots()
@@ -55,7 +55,7 @@ def _source(module):
 
 def available_tools():
     return [{'id': key, 'root': str(root), 'available': root.is_dir(),
-             'capability': {'mco': 'native ask/tell optimization with explicit evaluator',
+             'capability': {'optimizer': 'native ask/tell optimization with explicit evaluator',
                             'caplab': 'full Y matrix decomposition, resonance interpolation and workbook export',
                             'z11': 'static RLC and mutual inductance one-port solve'}[key]}
             for key, root in TOOL_ROOTS.items()]
@@ -108,7 +108,7 @@ def execute_action(spec, evaluate=None, cancel_event=None, log=None):
         if log:
             log('Running ' + spec['tool'] + ' on graph ' + data['graph_hash'][:12])
         options = dict(spec.get('options') or {})
-        if spec['tool'] == 'mco':
+        if spec['tool'] == 'optimizer':
             result = _optimize(data, output, evaluate, cancel_event, log, **options)
         elif spec['tool'] == 'z11':
             result = _z11(data, output, **options)
@@ -347,15 +347,15 @@ def _caplab(data, output, port, samples=None, sample_provenance=None, selected_i
 def _optimize(data, output, evaluate, cancel_event, log, variables, budget=12, batch_size=4,
               algorithm='bayesian_optimization', seed=1, parameters=None):
     if not callable(evaluate):
-        raise ValueError('MCO requires an explicit project evaluator callback; no default synthetic objective')
+        raise ValueError('external circuit optimizer requires an explicit project evaluator callback; no default synthetic objective')
     if algorithm not in ('random', 'differential_evolution', 'nsga2', 'bayesian_optimization'):
-        raise ValueError('Unsupported MCO algorithm')
+        raise ValueError('Unsupported external circuit optimizer algorithm')
     if not 1 <= int(budget) <= 100000 or not 1 <= int(batch_size) <= int(budget):
         raise ValueError('Invalid optimization budget/batch size')
     names = [v['parameter_id'] for v in variables]
     if len(names) != len(set(names)) or not set(names).issubset(data['graph'].get('parameters', {})):
         raise ValueError('Variables must uniquely name existing shared graph parameters')
-    module = _module('mco', 'circuit_optimizer.optimizers')
+    module = _module('optimizer', 'circuit_optimizer.optimizers')
     optimizer = module.PopulationGenerator(variables, algorithm=algorithm, seed=seed, parameters=parameters)
     from .generator import generate
     history = []
@@ -401,7 +401,7 @@ def _optimize(data, output, evaluate, cancel_event, log, variables, budget=12, b
                    'metrics': {'merit': merit, 'objectives': objectives, 'total_violation': violation, 'feasible': feasible},
                    'violations': observation.get('violations', []),
                    'evidence': observation.get('evidence', {}), 'manifest': manifest, 'directory': str(candidate_dir)}
-            _write(candidate_dir / 'mco-evaluation.json', row)
+            _write(candidate_dir / 'optimizer-evaluation.json', row)
             history.append(row)
             if status == 'completed':
                 evaluated.append(row)
@@ -415,20 +415,20 @@ def _optimize(data, output, evaluate, cancel_event, log, variables, budget=12, b
     best = min(feasible_rows, key=rank) if feasible_rows else None
     best_unqualified = min(completed, key=rank) if completed and not feasible_rows else None
     outcome = 'feasible_candidates_available' if feasible_rows else 'all_completed_candidates_infeasible' if completed else 'no_completed_evaluations'
-    return {'sources': [_source(module), _source(_module('mco', 'circuit_optimizer.metrics')), _source(_module('mco', 'circuit_optimizer.engineering'))], 'engine': 'circuit_optimizer.optimizers.PopulationGenerator',
+    return {'sources': [_source(module), _source(_module('optimizer', 'circuit_optimizer.metrics')), _source(_module('optimizer', 'circuit_optimizer.engineering'))], 'engine': 'circuit_optimizer.optimizers.PopulationGenerator',
             'status': 'completed' if completed else 'failed', 'outcome': outcome,
             'algorithm': algorithm, 'seed': seed, 'evaluations': len(history), 'best': best, 'best_unqualified': best_unqualified,
             'completed_evaluations': len(completed), 'feasible_evaluations': len(feasible_rows),
             'failed_evaluations': sum(row['status'] == 'failed' for row in history),
             'not_evaluated_count': sum(row['status'] == 'not_evaluated' for row in history),
             'history': str(output / 'history.json'), 'qualification': 'evaluator_dependent_exploration',
-            'limitations': ['MCO chooses candidates; evaluator evidence controls electrical validity.',
+            'limitations': ['external circuit optimizer chooses candidates; evaluator evidence controls electrical validity.',
                             'Optimization success does not qualify phase noise, startup, PVT coverage or final code maps.']}
 
 
 def optimize(generated_dir, variables, evaluate, output_dir, **options):
     cancel_event, log = options.pop('cancel_event', None), options.pop('log', None)
-    return execute_action(action_spec('mco', generated_dir, output_dir, variables=variables, **options),
+    return execute_action(action_spec('optimizer', generated_dir, output_dir, variables=variables, **options),
                           evaluate=evaluate, cancel_event=cancel_event, log=log)
 
 
