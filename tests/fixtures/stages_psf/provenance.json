@@ -1,0 +1,8 @@
+{
+  "kind": "synthetic",
+  "formula": "HB: f=11 GHz, OUTP=+0.3, OUTN=-0.3, DC supply current=-4 mA. Noise: out=1e-6*(1e6/offset); tail share=0.75, tail flicker share=0.8.",
+  "files": {
+    "hb.txt": "014b7b1040629e9ad9dfc12ed18f877f3cc93c4cedfcdd52cfb211ae619274ca",
+    "noise.txt": "df087a7f3650135fd59244998709afaf6f16d2a7fdfef558a6a8d174e12651fc"
+  }
+}

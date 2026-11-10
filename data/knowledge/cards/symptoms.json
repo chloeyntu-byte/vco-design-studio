@@ -1,0 +1,262 @@
+[
+  {
+    "id": "vco-card-symptom-pn-flicker",
+    "type": "symptom",
+    "title": "A steep phase-noise slope can suggest flicker up-conversion",
+    "applies": {
+      "symptoms": [
+        "PN_FLICKER",
+        "PN_TAIL"
+      ],
+      "stage": [
+        "tuning",
+        "characterization"
+      ]
+    },
+    "summary": "A steep phase-noise slope can suggest flicker up-conversion. Source decomposition at the failing offset is needed to identify its origin.",
+    "actions": [
+      "Inspect absolute noise contributions and operating conditions.",
+      "Consider tail filtering and legal device sizing; remeasure all required offsets."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-pn-thermal",
+    "type": "symptom",
+    "title": "A thermal-noise-like slope motivates checking tank energy, loss and core noise",
+    "applies": {
+      "symptoms": [
+        "PN_THERMAL",
+        "PN_CORE",
+        "PN_TANK"
+      ],
+      "stage": [
+        "tuning",
+        "characterization"
+      ]
+    },
+    "summary": "A thermal-noise-like slope motivates checking tank energy, loss and core noise. Slope alone does not establish a unique mechanism.",
+    "actions": [
+      "Check available power, swing and effective tank Q.",
+      "Compare only matched measured conditions."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-amp-low-bank-loading",
+    "type": "symptom",
+    "title": "Off-state switches and their bias networks may load the tank and lower swing at some codes",
+    "applies": {
+      "symptoms": [
+        "AMP_LOW",
+        "PN_THERMAL",
+        "PN_BANK"
+      ],
+      "stage": [
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "Off-state switches and their bias networks may load the tank and lower swing at some codes.",
+    "actions": [
+      "Measure the full biased bank admittance.",
+      "Check legal bias resistance and switch geometry using your binding."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-hb-frequency-guess",
+    "type": "symptom",
+    "title": "A periodic solver can fail when its initial frequency guess is far from the oscillating mode",
+    "applies": {
+      "symptoms": [
+        "SOLVER_ERROR",
+        "NO_OSC"
+      ],
+      "stage": [
+        "characterization",
+        "coverage",
+        "tuning"
+      ]
+    },
+    "summary": "A periodic solver can fail when its initial frequency guess is far from the oscillating mode.",
+    "actions": [
+      "Probe startup frequency or update the guess before changing geometry."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-model-domain",
+    "type": "symptom",
+    "title": "Geometry outside a user model domain must be corrected before interpreting a solver failure as a circuit limit",
+    "applies": {
+      "symptoms": [
+        "SOLVER_ERROR",
+        "MODEL_WARN"
+      ],
+      "stage": [
+        "characterization",
+        "tuning"
+      ]
+    },
+    "summary": "Geometry outside a user model domain must be corrected before interpreting a solver failure as a circuit limit.",
+    "actions": [
+      "Read the instance and model diagnostic.",
+      "Use explicit binding limits; do not invent missing technology rules."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-no-oscillation",
+    "type": "symptom",
+    "title": "Insufficient startup gain, excessive tank loading or selection of a DC solution can prevent oscillation",
+    "applies": {
+      "symptoms": [
+        "NO_OSC"
+      ],
+      "stage": [
+        "characterization",
+        "tuning"
+      ]
+    },
+    "summary": "Insufficient startup gain, excessive tank loading or selection of a DC solution can prevent oscillation.",
+    "actions": [
+      "Inspect startup, loss, bias and modal excitation."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-timeout",
+    "type": "symptom",
+    "title": "A timeout is an execution failure, rather than proof of electrical infeasibility",
+    "applies": {
+      "symptoms": [
+        "TIMEOUT"
+      ],
+      "stage": [
+        "characterization",
+        "coverage",
+        "convergence"
+      ]
+    },
+    "summary": "A timeout is an execution failure, rather than proof of electrical infeasibility.",
+    "actions": [
+      "Check solver progress and frequency guess.",
+      "Retain the timeout receipt before retrying with a bounded budget."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-frequency-off",
+    "type": "symptom",
+    "title": "For an ideal LC resonance, f is proportional to 1/sqrt(LC)",
+    "applies": {
+      "symptoms": [
+        "F_HIGH",
+        "F_LOW"
+      ],
+      "stage": [
+        "tuning",
+        "characterization"
+      ]
+    },
+    "summary": "For an ideal LC resonance, f is proportional to 1/sqrt(LC). Fixed and parasitic capacitance require remeasurement after scaling.",
+    "actions": [
+      "Apply a bounded LC correction.",
+      "Check both tuning endpoints."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-power",
+    "type": "symptom",
+    "title": "Total power includes supply, bias and control sources",
+    "applies": {
+      "symptoms": [
+        "P_HIGH",
+        "P_HEADROOM"
+      ],
+      "stage": [
+        "tuning"
+      ]
+    },
+    "summary": "Total power includes supply, bias and control sources. The useful power knob follows the actual bias topology.",
+    "actions": [
+      "Check each source current and its voltage.",
+      "Remeasure frequency and phase noise after changing bias."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-symptom-steady-warning",
+    "type": "symptom",
+    "title": "Periodic convergence alone does not prove startup or transient steady state",
+    "applies": {
+      "symptoms": [
+        "STEADY_WARN"
+      ],
+      "stage": [
+        "coverage",
+        "convergence",
+        "delivery"
+      ]
+    },
+    "summary": "Periodic convergence alone does not prove startup or transient steady state.",
+    "actions": [
+      "Save a startup waveform and inspect its envelope.",
+      "Keep unresolved warnings in the result qualification."
+    ],
+    "evidence": [
+      "vco_studio/advisor.py",
+      "vco_studio/simulator.py"
+    ],
+    "confidence": "theory+procedure",
+    "lifecycle": "current"
+  }
+]

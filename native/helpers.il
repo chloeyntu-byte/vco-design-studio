@@ -1,0 +1,33 @@
+; VCO Studio: physical wires and labels, never fabricated instTerms.
+procedure(vcoStub(cv inst termName netName)
+ let((term fig p q wire center ymin ymax pp tfig)
+  term=dbFindTermByName(inst~>master termName)
+  unless(term error("Missing master terminal %s/%s" inst~>name termName))
+  fig=car(car(term~>pins)~>figs)
+  unless(fig fig=car(term~>pins)~>fig)
+  unless(fig error("Terminal has no pin figure %s" termName))
+  p=dbTransformPoint(centerBox(fig~>bBox) inst~>transform)
+  center=centerBox(inst~>bBox)
+  ymin=1e20 ymax=-1e20
+  foreach(tt inst~>master~>terminals
+   tfig=car(car(tt~>pins)~>figs)
+   unless(tfig tfig=car(tt~>pins)~>fig)
+   pp=dbTransformPoint(centerBox(tfig~>bBox) inst~>transform)
+   ymin=min(ymin yCoord(pp)) ymax=max(ymax yCoord(pp)))
+  if(ymax-ymin>0.01 && (abs(yCoord(p)-ymax)<0.001 || abs(yCoord(p)-ymin)<0.001) then
+   q=list(xCoord(p) yCoord(p)+if(abs(yCoord(p)-ymax)<0.001 then 0.375 else -0.375))
+  else
+   q=list(xCoord(p)+if(xCoord(p)>=xCoord(center) then 0.375 else -0.375) yCoord(p)))
+  wire=car(schCreateWire(cv "draw" "full" list(p q) 0.0625 0.0625 0.0))
+  unless(wire error("Wire creation failed"))
+  schCreateWireLabel(cv wire q netName "centerCenter" "R0" "stick" 0.0625 nil)
+ ))
+procedure(vcoPort(cv name direction xy)
+ let((master pin q wire)
+  master=dbOpenCellViewByType("basic" "iopin" "symbol" "" "r")
+  pin=schCreatePin(cv master name direction nil xy "R0")
+  unless(pin error("Cannot create schematic pin %s" name))
+  q=list(xCoord(xy)+0.375 yCoord(xy))
+  wire=car(schCreateWire(cv "draw" "full" list(xy q) 0.0625 0.0625 0.0))
+  schCreateWireLabel(cv wire q name "centerCenter" "R0" "stick" 0.0625 nil)
+ ))

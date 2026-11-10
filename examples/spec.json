@@ -1,0 +1,17 @@
+{
+  "pdk": "demo_a",
+  "frequency_band_hz": [
+    9400000000.0,
+    10600000000.0
+  ],
+  "power_max_mw": 3.0,
+  "pn_targets_dbc_hz": {
+    "1000000": -110
+  },
+  "vdd_v": 1.0,
+  "temp_c": 27,
+  "budget": {
+    "solver_processes": 30
+  },
+  "enforcement": "guided"
+}

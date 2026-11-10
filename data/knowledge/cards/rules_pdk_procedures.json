@@ -1,0 +1,251 @@
+[
+  {
+    "id": "vco-card-rule-stage-tt",
+    "type": "rule",
+    "title": "Stage tt",
+    "applies": {
+      "stage": [
+        "selection",
+        "characterization",
+        "tuning",
+        "coverage",
+        "convergence",
+        "delivery"
+      ]
+    },
+    "summary": "Nominal characterization is a separate qualification from PVT, Monte Carlo and extracted simulation.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-rule-classb-baseline",
+    "type": "rule",
+    "title": "Classb baseline",
+    "applies": {
+      "stage": [
+        "selection",
+        "tuning"
+      ],
+      "family": [
+        "class_b",
+        "hegazi"
+      ]
+    },
+    "summary": "Use a frequency, power and tank matched baseline. Optimize its permitted bias and filtering before making architectural claims.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-rule-evidence-counting",
+    "type": "rule",
+    "title": "Evidence counting",
+    "applies": {
+      "stage": [
+        "selection",
+        "delivery"
+      ]
+    },
+    "summary": "Count actual solver receipts, not summaries or copied outputs, when enforcing a solver budget.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-procedure-design-loop",
+    "type": "procedure",
+    "title": "Design loop",
+    "applies": {
+      "stage": [
+        "selection"
+      ]
+    },
+    "summary": "Inspect requirements, select a structure, generate a candidate, measure, diagnose and retest before freezing.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-procedure-structure-upgrade",
+    "type": "procedure",
+    "title": "Structure upgrade",
+    "applies": {
+      "stage": [
+        "tuning",
+        "selection"
+      ],
+      "symptoms": [
+        "PN_THERMAL",
+        "PN_FLICKER"
+      ]
+    },
+    "summary": "Use measured constraints and a discriminating mechanism comparison to decide whether another architecture is needed.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-procedure-convergence",
+    "type": "procedure",
+    "title": "Convergence",
+    "applies": {
+      "stage": [
+        "convergence",
+        "delivery"
+      ]
+    },
+    "summary": "Independent solver settings must produce agreeing frequency, power and phase noise for the same physical circuit and controls.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-procedure-delivery",
+    "type": "procedure",
+    "title": "Delivery",
+    "applies": {
+      "stage": [
+        "delivery"
+      ]
+    },
+    "summary": "Freeze the adopted controls with source hashes, qualification scope and unresolved warnings.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-method-startup-gain",
+    "type": "procedure",
+    "title": "Startup gain",
+    "applies": {
+      "stage": [
+        "selection",
+        "tuning"
+      ],
+      "symptoms": [
+        "AMP_LOW",
+        "NO_OSC",
+        "PN_THERMAL"
+      ]
+    },
+    "summary": "DC loop gain is a startup screen. Periodic operation, mode selection and noise require separate evidence.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-tuning-gain-excess-gds",
+    "type": "tuning",
+    "title": "Gain excess gds",
+    "applies": {
+      "stage": [
+        "tuning"
+      ],
+      "family": [
+        "hegazi",
+        "guo",
+        "du",
+        "murphy"
+      ],
+      "symptoms": [
+        "PN_THERMAL"
+      ]
+    },
+    "summary": "Excess device width may increase loading and reduce effective impedance. Compare gain, swing and noise at matched conditions.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-procedure-no-startup",
+    "type": "procedure",
+    "title": "No startup",
+    "applies": {
+      "stage": [
+        "tuning",
+        "selection"
+      ],
+      "symptoms": [
+        "NO_OSC"
+      ]
+    },
+    "summary": "Check the startup mode, bias and tank loading before enlarging the core.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-tuning-tr-vs-gain",
+    "type": "tuning",
+    "title": "Tr vs gain",
+    "applies": {
+      "stage": [
+        "tuning",
+        "coverage"
+      ],
+      "symptoms": [
+        "NO_OSC"
+      ]
+    },
+    "summary": "Changing the tuning bank changes both capacitance coverage and loading; verify the full adopted control range.",
+    "actions": [
+      "Keep explicit user inputs, measured conditions and source hashes with the result."
+    ],
+    "evidence": [
+      "vco_studio/flow.py"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "schema": "vco.project.v1",
+  "family": "murphy",
+  "variant": "nmos",
+  "binding": "demo_a",
+  "parameters": {
+    "vdd": 1.0,
+    "vdc": 0.5,
+    "temp_c": 27,
+    "frequency_guess_ghz": 8,
+    "L_scale": 1,
+    "core_width_scale": 1,
+    "bank_cap_scale": 1,
+    "aux_cap_scale": 1,
+    "loss_scale": 1,
+    "k_scale": 1
+  },
+  "registers": {
+    "main": {
+      "bits": 4,
+      "value": 7
+    },
+    "aux": {
+      "bits": 4,
+      "value": 13
+    }
+  },
+  "simulation": {
+    "harmonics": 15,
+    "tstab_ns": 60,
+    "initial_conditions": {}
+  },
+  "workspace": "",
+  "target_library": "",
+  "target_cell": "VCO_murphy_nmos",
+  "inherited": [
+    "temp_c"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "vco.binding-catalog.v1",
+  "bindings": [
+    {
+      "pdk": "demo_a",
+      "file": "examples/bindings/demo_a.json",
+      "scope": "Fictional software fixture; no working semiconductor model",
+      "native_mapping": false
+    },
+    {
+      "pdk": "demo_b",
+      "file": "examples/bindings/demo_b.json",
+      "scope": "Fictional software fixture; no working semiconductor model",
+      "native_mapping": false
+    },
+    {
+      "pdk": "demo_c",
+      "file": "examples/bindings/demo_c.json",
+      "scope": "Fictional software fixture; no working semiconductor model",
+      "native_mapping": false
+    },
+    {
+      "pdk": "demo_d",
+      "file": "examples/bindings/demo_d.json",
+      "scope": "Fictional software fixture; no working semiconductor model",
+      "native_mapping": false
+    }
+  ]
+}

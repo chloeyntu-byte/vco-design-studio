@@ -1,0 +1,25 @@
+[
+  {
+    "id": "vco-card-procedure-device-domains",
+    "type": "procedure",
+    "title": "Use explicit user device domains",
+    "applies": {
+      "stage": [
+        "tuning"
+      ],
+      "symptoms": [
+        "AMP_LOW",
+        "MODEL_WARN"
+      ]
+    },
+    "summary": "Only the user binding establishes device domains. Example limits are invented software fixtures.",
+    "actions": [
+      "Read device documentation and encode verified limits in the binding."
+    ],
+    "evidence": [
+      "docs/BINDINGS.md"
+    ],
+    "confidence": "procedure",
+    "lifecycle": "current"
+  }
+]

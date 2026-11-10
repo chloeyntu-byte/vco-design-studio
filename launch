@@ -1,0 +1,17 @@
+#!/bin/sh
+# VCO设计系统 launcher: choose a Python >= 3.11 (env > site profile > PATH) and run the CLI.
+set -eu
+studio_base=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+site_file=${VCO_SITE:-$studio_base/config/site.json}
+site_python=""
+if [ -f "$site_file" ]; then
+  site_python=$(sed -n 's/^[[:space:]]*"python"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$site_file" | head -n 1)
+fi
+for cand in "${VCO_STUDIO_PYTHON:-}" "$site_python" "$(command -v python3.11 2>/dev/null || true)" "$(command -v python3 2>/dev/null || true)"; do
+  [ -n "$cand" ] && [ -x "$cand" ] || continue
+  if "$cand" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
+    PYTHONDONTWRITEBYTECODE=${PYTHONDONTWRITEBYTECODE:-1} exec "$cand" "$studio_base/run.py" "$@"
+  fi
+done
+echo '{"status":"error","message":"Python 3.11+ not found; set VCO_STUDIO_PYTHON or \"python\" in config/site.json"}' >&2
+exit 2

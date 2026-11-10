@@ -1,0 +1,1335 @@
+{
+  "id": "nmos",
+  "family": "murphy",
+  "name": "Murphy / nmos",
+  "description": "Implicit common-mode resonance",
+  "features": [
+    "Explicit electrical connectivity",
+    "Synthetic dimensions; user binding and characterization required"
+  ],
+  "connections": [
+    "Inspect the hierarchical graph and terminal net labels."
+  ],
+  "calibration": "Calibrate every adopted main/aux control pair using your own measured results.",
+  "paper_difference": "Conceptual implementation; not a reproduction of published sizing or layout.",
+  "paper_doi": "10.1109/JSSC.2016.2642207",
+  "defaults": {
+    "parameters": {
+      "vdd": 1.0,
+      "vdc": 0.5,
+      "temp_c": 55,
+      "frequency_guess_ghz": 8,
+      "L_scale": 1,
+      "core_width_scale": 1,
+      "bank_cap_scale": 1,
+      "aux_cap_scale": 1,
+      "loss_scale": 1,
+      "k_scale": 1
+    },
+    "registers": {
+      "main": {
+        "bits": 4,
+        "value": 0
+      },
+      "aux": {
+        "bits": 4,
+        "value": 0
+      }
+    },
+    "simulation": {
+      "harmonics": 15,
+      "tstab_ns": 60,
+      "initial_conditions": {}
+    }
+  },
+  "graph": {
+    "schema": "vco.graph.v1",
+    "name": "VCO_R3_Murphy_N",
+    "family": "murphy",
+    "variant": "nmos",
+    "ports": [
+      {
+        "name": "OUTN",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "OUTP",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "main_B3",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "main_B2",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "main_B1",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "main_B0",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "aux_B3",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "aux_B2",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "aux_B1",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "aux_B0",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "VDC",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "VDD",
+        "direction": "inputOutput"
+      },
+      {
+        "name": "VSS",
+        "direction": "inputOutput"
+      }
+    ],
+    "parameters": {},
+    "instances": [
+      {
+        "name": "RSLDA",
+        "role": "res",
+        "nodes": {
+          "p": "OUTP",
+          "n": "zLDA"
+        },
+        "parameters": {
+          "r": 4
+        },
+        "source_model": "resistor",
+        "position": [
+          0.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "LDA",
+        "role": "ind",
+        "nodes": {
+          "p": "zLDA",
+          "n": "VDD"
+        },
+        "parameters": {
+          "l": 1.5e-09
+        },
+        "source_model": "inductor",
+        "position": [
+          4.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "RPLDA",
+        "role": "res",
+        "nodes": {
+          "p": "OUTP",
+          "n": "VDD"
+        },
+        "parameters": {
+          "r": 1500
+        },
+        "source_model": "resistor",
+        "position": [
+          8.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "RSLDB",
+        "role": "res",
+        "nodes": {
+          "p": "OUTN",
+          "n": "zLDB"
+        },
+        "parameters": {
+          "r": 4
+        },
+        "source_model": "resistor",
+        "position": [
+          12.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "LDB",
+        "role": "ind",
+        "nodes": {
+          "p": "zLDB",
+          "n": "VDD"
+        },
+        "parameters": {
+          "l": 1.5e-09
+        },
+        "source_model": "inductor",
+        "position": [
+          16.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "RPLDB",
+        "role": "res",
+        "nodes": {
+          "p": "OUTN",
+          "n": "VDD"
+        },
+        "parameters": {
+          "r": 1500
+        },
+        "source_model": "resistor",
+        "position": [
+          20.0,
+          0.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "KDADB",
+        "role": "mutual",
+        "nodes": {},
+        "parameters": {
+          "coupling": -0.2,
+          "ind1": "LDA",
+          "ind2": "LDB"
+        },
+        "source_model": "mutual_inductor",
+        "position": [
+          0.0,
+          4.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "ICT",
+        "role": "subckt",
+        "nodes": {
+          "N": "OUTN",
+          "P": "OUTP",
+          "B3": "main_B3",
+          "B2": "main_B2",
+          "B1": "main_B1",
+          "B0": "main_B0",
+          "VDD": "VDD",
+          "VSS": "VSS"
+        },
+        "parameters": {},
+        "source_model": "CT_R3_main",
+        "position": [
+          4.0,
+          4.0
+        ],
+        "master": "CT_R3_main"
+      },
+      {
+        "name": "C0",
+        "role": "cap",
+        "nodes": {
+          "p": "OUTP",
+          "n": "OUTN"
+        },
+        "parameters": {
+          "c": 5e-14
+        },
+        "source_model": "capacitor",
+        "position": [
+          8.0,
+          4.0
+        ],
+        "ideal": true
+      },
+      {
+        "name": "MN1",
+        "role": "nmos",
+        "nodes": {
+          "d": "OUTP",
+          "g": "OUTN",
+          "s": "VSS",
+          "b": "VSS"
+        },
+        "parameters": {
+          "l": 4e-07,
+          "w": 3e-06,
+          "nf": 6,
+          "m": 1
+        },
+        "source_model": "demo_nmos",
+        "position": [
+          12.0,
+          4.0
+        ]
+      },
+      {
+        "name": "MN2",
+        "role": "nmos",
+        "nodes": {
+          "d": "OUTN",
+          "g": "OUTP",
+          "s": "VSS",
+          "b": "VSS"
+        },
+        "parameters": {
+          "l": 4e-07,
+          "w": 3e-06,
+          "nf": 6,
+          "m": 1
+        },
+        "source_model": "demo_nmos",
+        "position": [
+          16.0,
+          4.0
+        ]
+      },
+      {
+        "name": "ICMP",
+        "role": "subckt",
+        "nodes": {
+          "N": "VSS",
+          "P": "OUTP",
+          "B3": "aux_B3",
+          "B2": "aux_B2",
+          "B1": "aux_B1",
+          "B0": "aux_B0",
+          "VDD": "VDD",
+          "VSS": "VSS"
+        },
+        "parameters": {},
+        "source_model": "CT_R3_aux",
+        "position": [
+          20.0,
+          4.0
+        ],
+        "master": "CT_R3_aux"
+      },
+      {
+        "name": "ICMN",
+        "role": "subckt",
+        "nodes": {
+          "N": "VSS",
+          "P": "OUTN",
+          "B3": "aux_B3",
+          "B2": "aux_B2",
+          "B1": "aux_B1",
+          "B0": "aux_B0",
+          "VDD": "VDD",
+          "VSS": "VSS"
+        },
+        "parameters": {},
+        "source_model": "CT_R3_aux",
+        "position": [
+          0.0,
+          8.0
+        ],
+        "master": "CT_R3_aux"
+      }
+    ],
+    "subcircuits": [
+      {
+        "name": "inv",
+        "ports": [
+          {
+            "name": "IN",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "OUT",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VDD",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VSS",
+            "direction": "inputOutput"
+          }
+        ],
+        "parameters": {},
+        "instances": [
+          {
+            "name": "M0",
+            "role": "pmos",
+            "nodes": {
+              "d": "OUT",
+              "g": "IN",
+              "s": "VDD",
+              "b": "VDD"
+            },
+            "parameters": {
+              "l": 4e-07,
+              "w": 3e-06,
+              "nf": 6,
+              "m": 1
+            },
+            "source_model": "demo_pmos",
+            "position": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "name": "M1",
+            "role": "nmos",
+            "nodes": {
+              "d": "OUT",
+              "g": "IN",
+              "s": "VSS",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 4e-07,
+              "w": 3e-06,
+              "nf": 6,
+              "m": 1
+            },
+            "source_model": "demo_nmos",
+            "position": [
+              4.0,
+              0.0
+            ]
+          }
+        ],
+        "notes": [
+          "Synthetic geometry and passive values; electrical topology is illustrative."
+        ]
+      },
+      {
+        "name": "CT_R3U_main",
+        "ports": [
+          {
+            "name": "N",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "P",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "SW",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VDD",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VSS",
+            "direction": "inputOutput"
+          }
+        ],
+        "parameters": {},
+        "instances": [
+          {
+            "name": "M0",
+            "role": "nmos",
+            "nodes": {
+              "d": "net1",
+              "g": "net06",
+              "s": "net2",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 4e-07,
+              "w": 3e-06,
+              "nf": 6,
+              "m": 1
+            },
+            "source_model": "demo_nmos",
+            "position": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "name": "R1",
+            "role": "res",
+            "nodes": {
+              "p": "SW",
+              "n": "net1"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_res",
+            "position": [
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "name": "R0",
+            "role": "res",
+            "nodes": {
+              "p": "SW",
+              "n": "net2"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_res",
+            "position": [
+              8.0,
+              0.0
+            ]
+          },
+          {
+            "name": "I0",
+            "role": "subckt",
+            "nodes": {
+              "IN": "SW",
+              "OUT": "net06",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "inv",
+            "position": [
+              12.0,
+              0.0
+            ],
+            "master": "inv"
+          },
+          {
+            "name": "C3",
+            "role": "cap",
+            "nodes": {
+              "p": "N",
+              "n": "net1",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_cap",
+            "position": [
+              16.0,
+              0.0
+            ]
+          },
+          {
+            "name": "C2",
+            "role": "cap",
+            "nodes": {
+              "p": "P",
+              "n": "net2",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_cap",
+            "position": [
+              20.0,
+              0.0
+            ]
+          }
+        ],
+        "notes": [
+          "Synthetic geometry and passive values; electrical topology is illustrative."
+        ]
+      },
+      {
+        "name": "CT_R3_main",
+        "ports": [
+          {
+            "name": "N",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "P",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B3",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B2",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B1",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B0",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VDD",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VSS",
+            "direction": "inputOutput"
+          }
+        ],
+        "parameters": {},
+        "instances": [
+          {
+            "name": "I0_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B0",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              0.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I1_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B1",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              4.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I1_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B1",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              8.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I2_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              12.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I2_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              16.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I2_2",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              20.0,
+              0.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I2_3",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              0.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              4.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              8.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_2",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              12.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_3",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              16.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_4",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              20.0,
+              4.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_5",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              0.0,
+              8.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_6",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              4.0,
+              8.0
+            ],
+            "master": "CT_R3U_main"
+          },
+          {
+            "name": "I3_7",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_main",
+            "position": [
+              8.0,
+              8.0
+            ],
+            "master": "CT_R3U_main"
+          }
+        ],
+        "notes": [
+          "Synthetic geometry and passive values; electrical topology is illustrative."
+        ]
+      },
+      {
+        "name": "CT_R3U_aux",
+        "ports": [
+          {
+            "name": "N",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "P",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "SW",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VDD",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VSS",
+            "direction": "inputOutput"
+          }
+        ],
+        "parameters": {},
+        "instances": [
+          {
+            "name": "M0",
+            "role": "nmos",
+            "nodes": {
+              "d": "net1",
+              "g": "net06",
+              "s": "N",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 4e-07,
+              "w": 3e-06,
+              "nf": 6,
+              "m": 1
+            },
+            "source_model": "demo_nmos",
+            "position": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "name": "R1",
+            "role": "res",
+            "nodes": {
+              "p": "SW",
+              "n": "net1"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_res",
+            "position": [
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "name": "I0",
+            "role": "subckt",
+            "nodes": {
+              "IN": "SW",
+              "OUT": "net06",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "inv",
+            "position": [
+              8.0,
+              0.0
+            ],
+            "master": "inv"
+          },
+          {
+            "name": "C2",
+            "role": "cap",
+            "nodes": {
+              "p": "P",
+              "n": "net1",
+              "b": "VSS"
+            },
+            "parameters": {
+              "l": 3e-06,
+              "w": 3e-06,
+              "m": 1
+            },
+            "source_model": "demo_cap",
+            "position": [
+              12.0,
+              0.0
+            ]
+          }
+        ],
+        "notes": [
+          "Synthetic geometry and passive values; electrical topology is illustrative."
+        ]
+      },
+      {
+        "name": "CT_R3_aux",
+        "ports": [
+          {
+            "name": "N",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "P",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B3",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B2",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B1",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "B0",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VDD",
+            "direction": "inputOutput"
+          },
+          {
+            "name": "VSS",
+            "direction": "inputOutput"
+          }
+        ],
+        "parameters": {},
+        "instances": [
+          {
+            "name": "I0_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B0",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              0.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I1_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B1",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              4.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I1_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B1",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              8.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I2_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              12.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I2_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              16.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I2_2",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              20.0,
+              0.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I2_3",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B2",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              0.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_0",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              4.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_1",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              8.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_2",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              12.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_3",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              16.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_4",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              20.0,
+              4.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_5",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              0.0,
+              8.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_6",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              4.0,
+              8.0
+            ],
+            "master": "CT_R3U_aux"
+          },
+          {
+            "name": "I3_7",
+            "role": "subckt",
+            "nodes": {
+              "N": "N",
+              "P": "P",
+              "SW": "B3",
+              "VDD": "VDD",
+              "VSS": "VSS"
+            },
+            "parameters": {},
+            "source_model": "CT_R3U_aux",
+            "position": [
+              8.0,
+              8.0
+            ],
+            "master": "CT_R3U_aux"
+          }
+        ],
+        "notes": [
+          "Synthetic geometry and passive values; electrical topology is illustrative."
+        ]
+      }
+    ],
+    "registers": [
+      {
+        "name": "main",
+        "bits": 4,
+        "role": "main_tuning",
+        "default": 0,
+        "controllable": true,
+        "active_level": "low",
+        "pins_msb_first": [
+          "main_B3",
+          "main_B2",
+          "main_B1",
+          "main_B0"
+        ]
+      },
+      {
+        "name": "aux",
+        "bits": 4,
+        "role": "second_harmonic_tuning",
+        "default": 0,
+        "controllable": true,
+        "active_level": "low",
+        "pins_msb_first": [
+          "aux_B3",
+          "aux_B2",
+          "aux_B1",
+          "aux_B0"
+        ]
+      }
+    ],
+    "notes": [
+      "Synthetic geometry and passive values; electrical topology is illustrative."
+    ],
+    "provenance": {
+      "kind": "synthetic_example",
+      "qualification": "Conceptual connectivity only; invented geometry and losses, no measured performance."
+    }
+  },
+  "provenance": {
+    "kind": "synthetic_example",
+    "qualification": "Conceptual connectivity only; invented geometry and losses, no measured performance."
+  }
+}

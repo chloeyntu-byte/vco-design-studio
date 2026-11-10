@@ -1,0 +1,171 @@
+[
+  {
+    "id": "vco-card-arch-overview",
+    "type": "architecture",
+    "title": "Architecture overview",
+    "applies": {
+      "stage": [
+        "selection"
+      ]
+    },
+    "summary": "Five harmonic-shaping families with eight variants, plus a separate Class-B comparison baseline. Auxiliary controls exist only in families with an independent physical tuning network.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-hegazi",
+    "type": "architecture",
+    "title": "Hegazi tail/top/voltage: tail harmonic filter, aux = 2f tail tuning",
+    "applies": {
+      "family": [
+        "hegazi"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "Explicit source or bias return filtering can change tail-noise transfer and the harmonic return. Calibrate the auxiliary network over the adopted main controls.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-murphy",
+    "type": "architecture",
+    "title": "Murphy nmos/cmos: implicit common-mode resonance from coupled magnetics",
+    "applies": {
+      "family": [
+        "murphy"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "A coupled magnetic network supplies differential and common-mode resonances. Auxiliary capacitance adjusts the return; core width is the main power knob.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-lim",
+    "type": "architecture",
+    "title": "Lim inverse-F: drain-gate multimode waveform shaping",
+    "applies": {
+      "family": [
+        "lim"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "Drain-gate multimode feedback shapes the drain waveform. The relevant harmonic port must follow the actual connections, rather than a generic output common-mode assumption.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-guo",
+    "type": "architecture",
+    "title": "Guo wideband harmonic shaping: fixed head, no aux",
+    "applies": {
+      "family": [
+        "guo"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "Fixed coupled branches implement broadband harmonic shaping. Only the main tuning control is independent; gate bias controls power.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-du",
+    "type": "architecture",
+    "title": "Du dual-core autotracking: shared capacitance tracks the 2f mode",
+    "applies": {
+      "family": [
+        "du"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "Two cores share tuning capacitance. Verify intended-mode startup and mode separation; no independent auxiliary control is assumed.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  },
+  {
+    "id": "vco-card-arch-classb",
+    "type": "architecture",
+    "title": "Class-B comparison baseline",
+    "applies": {
+      "family": [
+        "class_b"
+      ],
+      "stage": [
+        "selection",
+        "tuning",
+        "characterization",
+        "coverage"
+      ]
+    },
+    "summary": "A cross-coupled core with optional tail bias is a comparison baseline. Match frequency, power and tank conditions before comparing noise.",
+    "actions": [
+      "Inspect the family graph. Characterize the target binding and calibrate all adopted controls before comparison."
+    ],
+    "evidence": [
+      "data/catalog.json"
+    ],
+    "confidence": "conceptual",
+    "lifecycle": "current"
+  }
+]

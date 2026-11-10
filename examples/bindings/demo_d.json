@@ -1,0 +1,220 @@
+{
+  "schema": "vco.binding.v1",
+  "name": "demo_d",
+  "status": "resolved",
+  "unresolved": [],
+  "workspace": "",
+  "technology": null,
+  "model_includes": [
+    {
+      "path": "@repo/examples/placeholder.scs"
+    }
+  ],
+  "roles": {
+    "nmos": {
+      "library": "example_devices",
+      "cell": "demo_nmos",
+      "view": "symbol",
+      "model": "demo_nmos",
+      "terminals": {
+        "d": "D",
+        "g": "G",
+        "s": "S",
+        "b": "B"
+      },
+      "parameter_map": {
+        "l": "l",
+        "w": "w",
+        "nf": "nf",
+        "m": "m"
+      },
+      "netlist_terminal_order": [
+        "d",
+        "g",
+        "s",
+        "b"
+      ],
+      "netlist_parameter_map": {
+        "l": "l",
+        "w": "w",
+        "nf": "nf",
+        "m": "m"
+      },
+      "seed_parameters": {
+        "l": 4e-07,
+        "w": 3e-06,
+        "nf": 6,
+        "m": 1
+      },
+      "limits": {
+        "l": [
+          2e-07,
+          4e-05
+        ],
+        "w": [
+          1e-06,
+          5e-06
+        ],
+        "nf": [
+          1,
+          48
+        ]
+      },
+      "geometry_policy": "target_seed"
+    },
+    "pmos": {
+      "library": "example_devices",
+      "cell": "demo_pmos",
+      "view": "symbol",
+      "model": "demo_pmos",
+      "terminals": {
+        "d": "D",
+        "g": "G",
+        "s": "S",
+        "b": "B"
+      },
+      "parameter_map": {
+        "l": "l",
+        "w": "w",
+        "nf": "nf",
+        "m": "m"
+      },
+      "netlist_terminal_order": [
+        "d",
+        "g",
+        "s",
+        "b"
+      ],
+      "netlist_parameter_map": {
+        "l": "l",
+        "w": "w",
+        "nf": "nf",
+        "m": "m"
+      },
+      "seed_parameters": {
+        "l": 4e-07,
+        "w": 3e-06,
+        "nf": 6,
+        "m": 1
+      },
+      "limits": {
+        "l": [
+          2e-07,
+          4e-05
+        ],
+        "w": [
+          1e-06,
+          5e-06
+        ],
+        "nf": [
+          1,
+          48
+        ]
+      },
+      "geometry_policy": "target_seed"
+    },
+    "cap": {
+      "library": "example_devices",
+      "cell": "demo_cap",
+      "view": "symbol",
+      "model": "demo_cap",
+      "terminals": {
+        "p": "P",
+        "n": "N",
+        "b": "B"
+      },
+      "parameter_map": {
+        "l": "l",
+        "w": "w",
+        "m": "m"
+      },
+      "netlist_terminal_order": [
+        "p",
+        "n",
+        "b"
+      ],
+      "netlist_parameter_map": {
+        "l": "l",
+        "w": "w",
+        "m": "m"
+      },
+      "seed_parameters": {
+        "l": 3e-06,
+        "w": 3e-06,
+        "m": 1
+      },
+      "limits": {
+        "l": [
+          2e-06,
+          3e-05
+        ],
+        "w": [
+          2e-06,
+          3e-05
+        ]
+      },
+      "geometry_policy": "target_seed"
+    },
+    "res": {
+      "library": "example_devices",
+      "cell": "demo_res",
+      "view": "symbol",
+      "model": "demo_res",
+      "terminals": {
+        "p": "P",
+        "n": "N"
+      },
+      "parameter_map": {
+        "l": "l",
+        "w": "w",
+        "m": "m"
+      },
+      "netlist_terminal_order": [
+        "p",
+        "n"
+      ],
+      "netlist_parameter_map": {
+        "l": "l",
+        "w": "w",
+        "m": "m"
+      },
+      "seed_parameters": {
+        "l": 3e-06,
+        "w": 3e-06,
+        "m": 1
+      },
+      "limits": {
+        "l": [
+          2e-06,
+          3e-05
+        ],
+        "w": [
+          2e-06,
+          3e-05
+        ]
+      },
+      "geometry_policy": "target_seed"
+    },
+    "ind": {
+      "library": "analogLib",
+      "cell": "ind",
+      "view": "symbol",
+      "model": "inductor",
+      "terminals": {
+        "p": "PLUS",
+        "n": "MINUS"
+      },
+      "parameter_map": {
+        "l": "l"
+      },
+      "netlist_terminal_order": [
+        "p",
+        "n"
+      ],
+      "netlist_parameter_map": {
+        "l": "l"
+      }
+    }
+  },
+  "qualification": "Fictional example only. No semiconductor models, technology rules or performance evidence supplied."
+}

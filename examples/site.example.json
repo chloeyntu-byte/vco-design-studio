@@ -1,0 +1,13 @@
+{
+  "schema": "vco.site.v1",
+  "name": "user-provided",
+  "bindings": {
+    "my_devices": "/path/to/binding.json"
+  },
+  "kb": {
+    "enabled": false
+  },
+  "tools": {},
+  "evidence_indexes": [],
+  "sim_lock_command": []
+}
