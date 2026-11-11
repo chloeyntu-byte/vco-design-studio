@@ -86,6 +86,18 @@ Cap Array Lab、Z11 和 **external circuit optimizer（外部电路优化器）*
 
 合成尺寸仅用于软件演示，不保证起振、调谐范围、相噪、可靠性或 PVT。概念图省略部分细节，电气连接以 circuit graph 为准。原生耦合电感目前要求 `analogLib/ind` 适配器，其他磁模型须增加已验证适配器。外部工具适配器依赖用户的兼容安装。稀疏代表码不能证明全频段覆盖。版图交接与验证脚手架不执行物理版图、DRC/LVS 签核或提取。本次公开版本未验证真实 EDA 执行。
 
+## RF-FIELDWORK
+
+产品介绍页：https://rf-fieldwork.pages.dev/vco/?lang=zh（含配音演示片的工具在页面上可直接观看）
+
+其他开源工具：
+
+- [Flux Studio](https://github.com/chloeyntu-byte/flux-studio)：参数化射频无源器件、EMX 扫参、多目标优化与 SNPFit 拟合
+- [Cap Array Lab](https://github.com/chloeyntu-byte/cap-array-lab)：电容阵列 C/Q、寄生路径、谐振与 Z11
+- [Layout 3D Viewer](https://github.com/chloeyntu-byte/layout-3d-viewer)：三维阅读版图、定位 pin、追踪连接
+- [VCO ISF Explorer](https://github.com/chloeyntu-byte/vco-isf-explorer)：ISF、闪烁噪声上变频与相噪贡献
+- [Crescendo](https://github.com/chloeyntu-byte/crescendo)：在 Cadence Maestro 里自动优化器件尺寸
+
 ## 许可
 
 MIT，见 [LICENSE](LICENSE)。
