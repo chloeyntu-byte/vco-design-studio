@@ -14,6 +14,8 @@
 - 通过明确的器件绑定和工作区导出原生 OA 构建脚本。
 - 通过 CLI 驱动有预算的设计流程、证据检查和资格验证阶段。
 - `skills/` 提供九份 Agent 工作流说明，并附通用知识卡与小型分析脚本。
+- 原生导出把每个设计封装成可复用的层级（电感、gm 核、偏置、电容阵列、单元、反相器），每层都有画好的 symbol；提供结构包时顶层按论文原图布局，没有结构包时自动推导并自动布局；封装后的网表与电气 graph 逐器件核对一致。
+- 结构包提供对照论文的结构图，器件标注即生成 schematic 的实例路径，并给出原论文的引用与图号、页码。
 
 ## 环境要求
 
@@ -63,6 +65,9 @@ export VCO_STUDIO_PYTHON="$(command -v python3.11)"
 ./launch kb check
 ./launch kb cards --stage selection --family murphy
 ./launch flow-next /path/to/task
+./launch schematic check hegazi tail
+./launch schematic preview hegazi tail --out /path/to/hegazi-preview
+VCO_STUDIO_SCHEMATIC_DIR=examples/schematic-pack ./launch topology check class_b nmos
 ```
 
 开始设计流程前阅读[入口技能](skills/eda-vco-design/SKILL.md)。`./launch quickstart` 介绍流程命令。用户必须提供自己的实测证据；本版本不附实测查找表或性能排名，空证据返回未知。需要求解器的命令与离线快速开始分开说明。

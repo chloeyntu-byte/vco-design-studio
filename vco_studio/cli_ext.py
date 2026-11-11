@@ -21,7 +21,7 @@ def dispatch(args):
 def _modules():
     import importlib
     out = []
-    for name in ('knowledge', 'select', 'autosize', 'tools_cli', 'loopgain', 'sizing', 'stages'):
+    for name in ('knowledge', 'select', 'autosize', 'tools_cli', 'loopgain', 'sizing', 'stages', 'schematic', 'topology_view'):
         try:
             mod = importlib.import_module('vco_studio.' + name)
         except ModuleNotFoundError as exc:

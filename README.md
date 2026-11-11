@@ -11,7 +11,8 @@ An LC VCO topology and circuit-generation workbench for engineers and agents.
 - Browse five topology families and eight variants, with hierarchical circuit graphs and concept diagrams.
 - Edit operating conditions and physical tuning controls; keep project and binding JSON files separate.
 - Generate Spectre circuit/testbench files and immutable manifests from one electrical graph.
-- Export native OA build scripts using an explicit device binding and workspace.
+- Export native OA build scripts using an explicit device binding and workspace. The export packages each design into a reusable hierarchy (inductor, gm core, bias, capacitor arrays, units, inverter) with drawn symbols; with a user-provided structure pack the top level is laid out like the source paper figure, otherwise it is derived and laid out automatically. The packaged netlist is checked to be identical to the electrical graph.
+- Show a paper-style topology drawing (from a structure pack) whose labels are the generated schematic instance paths, next to the citation and figure location of the source paper.
 - Drive bounded design flows, evidence checks and qualification stages through the CLI.
 - Supply nine agent workflow skills under `skills/`, with generic knowledge cards and small analysis helpers.
 
@@ -63,6 +64,9 @@ Set `VCO_STUDIO_NATIVE_PROFILE` to a user JSON containing `virtuoso` and, if nee
 ./launch kb check
 ./launch kb cards --stage selection --family murphy
 ./launch flow-next /path/to/task
+./launch schematic check hegazi tail
+./launch schematic preview hegazi tail --out /path/to/hegazi-preview
+VCO_STUDIO_SCHEMATIC_DIR=examples/schematic-pack ./launch topology check class_b nmos
 ```
 
 Read [the entry skill](skills/eda-vco-design/SKILL.md) before running a design flow. `./launch quickstart` describes the flow commands. Use your own measured evidence; the release includes no measured lookup table or ranking. Empty evidence remains unknown. Solver-dependent commands are documented separately from the offline quick start.

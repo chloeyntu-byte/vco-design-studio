@@ -1,0 +1,162 @@
+{
+ "note": "Pin positions and extents of the standard analogLib/basic masters used by generated schematics. Outlines are not distributed; previews draw boxes. Native export probes the masters of the resolved binding.",
+ "masters": {
+  "analogLib/cap": {
+   "pins": {
+    "PLUS": [
+     0.0,
+     0.0
+    ],
+    "MINUS": [
+     0.0,
+     -0.375
+    ]
+   },
+   "bbox": [
+    -0.7625,
+    -0.4,
+    0.5875,
+    0.025
+   ],
+   "shapes": []
+  },
+  "analogLib/res": {
+   "pins": {
+    "PLUS": [
+     0.0,
+     0.0
+    ],
+    "MINUS": [
+     0.0,
+     -0.375
+    ]
+   },
+   "bbox": [
+    -0.7625,
+    -0.4,
+    0.5875,
+    0.025
+   ],
+   "shapes": []
+  },
+  "analogLib/ind": {
+   "pins": {
+    "PLUS": [
+     0.0,
+     0.0
+    ],
+    "MINUS": [
+     0.0,
+     -0.375
+    ]
+   },
+   "bbox": [
+    -0.73125,
+    -0.4,
+    0.5875,
+    0.025
+   ],
+   "shapes": []
+  },
+  "analogLib/mind": {
+   "pins": {},
+   "bbox": [
+    -0.28125,
+    -0.375,
+    0.21875,
+    0.15625
+   ],
+   "shapes": []
+  },
+  "analogLib/gnd": {
+   "pins": {
+    "gnd!": [
+     0.0,
+     0.0
+    ]
+   },
+   "bbox": [
+    -0.0625,
+    -0.25,
+    0.4625,
+    0.025
+   ],
+   "shapes": []
+  },
+  "analogLib/vdd": {
+   "pins": {
+    "vdd!": [
+     0.0,
+     0.0
+    ]
+   },
+   "bbox": [
+    -0.15625,
+    -0.025,
+    0.4625,
+    0.3125
+   ],
+   "shapes": []
+  },
+  "basic/iopin": {
+   "pins": {
+    "iopin": [
+     0.0,
+     0.0
+    ]
+   },
+   "bbox": [
+    -0.1125,
+    -0.0625,
+    0.1125,
+    0.25625
+   ],
+   "shapes": []
+  },
+  "basic/ipin": {
+   "pins": {
+    "ipin": [
+     -0.0625,
+     0.0
+    ]
+   },
+   "bbox": [
+    -0.35625,
+    -0.1625,
+    0.0,
+    0.0625
+   ],
+   "shapes": []
+  },
+  "basic/opin": {
+   "pins": {
+    "opin": [
+     0.0625,
+     0.0
+    ]
+   },
+   "bbox": [
+    0.0,
+    -0.1625,
+    0.35625,
+    0.0625
+   ],
+   "shapes": []
+  },
+  "basic/sympin": {
+   "pins": {
+    "sympin": [
+     0.0,
+     0.0
+    ]
+   },
+   "bbox": [
+    -0.025,
+    -0.025,
+    0.33125,
+    0.1
+   ],
+   "shapes": []
+  }
+ }
+}

@@ -1,0 +1,263 @@
+{
+ "schema": "vco.papers.v1",
+ "note": "Source figures of the five topology families (citation, DOI, figure, physical PDF page, crop box in PDF points). Figure images are not distributed: place your own crops as data/papers/figures/<file> or set VCO_STUDIO_PAPER_FIGURES to a folder that contains them. Captions are short descriptions written for this index, not quotations. The papers and figures remain under their publishers' copyright.",
+ "papers": [
+  {
+   "id": "hegazi2001",
+   "family": "hegazi",
+   "variants": [
+    "tail",
+    "top",
+    "voltage"
+   ],
+   "citation": "E. Hegazi, H. Sjöland, A. A. Abidi, \"A Filtering Technique to Lower LC Oscillator Phase Noise,\" IEEE JSSC, vol. 36, no. 12, pp. 1921–1930, Dec. 2001.",
+   "doi": "10.1109/4.972142",
+   "figures": [
+    {
+     "file": "hegazi2001_fig5.png",
+     "label": "Fig. 5",
+     "pdf_page": 4,
+     "journal_page": 1924,
+     "variants": [
+      "tail",
+      "voltage"
+     ],
+     "box": [
+      132.0,
+      56.0,
+      484.0,
+      302.4
+     ],
+     "caption": "Tail-biased differential LC VCO with the tail noise filter (capacitor only; inductor plus capacitor).",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "hegazi2001_fig6.png",
+     "label": "Fig. 6",
+     "pdf_page": 4,
+     "journal_page": 1924,
+     "variants": [
+      "top"
+     ],
+     "box": [
+      318.4,
+      310.4,
+      489.6,
+      537.6
+     ],
+     "caption": "Top-biased differential LC VCO with the noise filter at the source node.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    }
+   ]
+  },
+  {
+   "id": "murphy2017",
+   "family": "murphy",
+   "variants": [
+    "nmos",
+    "cmos"
+   ],
+   "citation": "D. Murphy, H. Darabi, H. Wu, \"Implicit Common-Mode Resonance in LC Oscillators,\" IEEE JSSC, vol. 52, no. 3, pp. 812–821, Mar. 2017.",
+   "doi": "10.1109/JSSC.2016.2642207",
+   "figures": [
+    {
+     "file": "murphy2017_fig1.png",
+     "label": "Fig. 1",
+     "pdf_page": 1,
+     "journal_page": 812,
+     "variants": [
+      "nmos"
+     ],
+     "box": [
+      316.0,
+      64.0,
+      576.0,
+      280.0
+     ],
+     "caption": "Original tail common-mode resonance versus the proposed implicit common-mode resonance.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "murphy2017_fig13.png",
+     "label": "Fig. 13",
+     "pdf_page": 7,
+     "journal_page": 818,
+     "variants": [
+      "nmos"
+     ],
+     "box": [
+      46.4,
+      224.0,
+      316.0,
+      438.4
+     ],
+     "caption": "Schematic of the fabricated NMOS prototype with differential and common-mode capacitor banks.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "murphy2017_fig10.png",
+     "label": "Fig. 10",
+     "pdf_page": 6,
+     "journal_page": 817,
+     "variants": [
+      "cmos"
+     ],
+     "box": [
+      44.0,
+      56.0,
+      308.0,
+      212.0
+     ],
+     "caption": "Derivation of the complementary topology with a tightly coupled transformer.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "murphy2017_fig17.png",
+     "label": "Fig. 17",
+     "pdf_page": 8,
+     "journal_page": 819,
+     "variants": [
+      "cmos"
+     ],
+     "box": [
+      318.4,
+      57.6,
+      448.0,
+      249.6
+     ],
+     "caption": "Schematic of the fabricated complementary (CMOS) prototype.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    }
+   ]
+  },
+  {
+   "id": "lim2018",
+   "family": "lim",
+   "variants": [
+    "inverse_f"
+   ],
+   "citation": "C. C. Lim, H. Ramiah, J. Yin, P.-I. Mak, R. P. Martins, \"An Inverse-Class-F CMOS Oscillator With Intrinsic-High-Q First Harmonic and Second Harmonic Resonances,\" IEEE JSSC, 2018 (local copy: early-access version).",
+   "doi": "10.1109/JSSC.2018.2875099",
+   "figures": [
+    {
+     "file": "lim2018_fig9a.png",
+     "label": "Fig. 9(a)",
+     "pdf_page": 5,
+     "journal_page": null,
+     "variants": [
+      "inverse_f"
+     ],
+     "box": [
+      56.0,
+      57.6,
+      308.0,
+      230.4
+     ],
+     "caption": "Complementary PMOS/NMOS inverse-class-F oscillator with a drain-gate transformer.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    }
+   ]
+  },
+  {
+   "id": "guo2021",
+   "family": "guo",
+   "variants": [
+    "wideband"
+   ],
+   "citation": "H. Guo, Y. Chen, P.-I. Mak, R. P. Martins, \"A 5.0-to-6.36GHz Wideband-Harmonic-Shaping VCO Achieving 196.9dBc/Hz Peak FoM and 90-to-180kHz 1/f³ PN Corner Without Harmonic Tuning,\" ISSCC 2021, paper 20.1, pp. 294–296.",
+   "doi": "10.1109/ISSCC42613.2021.9365761",
+   "figures": [
+    {
+     "file": "guo2021_fig20_1_3.png",
+     "label": "Figure 20.1.3 (left)",
+     "pdf_page": 2,
+     "journal_page": 295,
+     "variants": [
+      "wideband"
+     ],
+     "box": [
+      11.2,
+      270.4,
+      166.4,
+      494.4
+     ],
+     "caption": "Layout-style drawing of the complete VCO: head resonator, drain and gate windings, core and switched-capacitor bank.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "guo2021_fig20_1_2.png",
+     "label": "Figure 20.1.2 (left)",
+     "pdf_page": 2,
+     "journal_page": 295,
+     "variants": [
+      "wideband"
+     ],
+     "box": [
+      294.4,
+      30.4,
+      457.6,
+      264.0
+     ],
+     "caption": "Head resonator that extends the common-mode resonance without manual tuning.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    }
+   ]
+  },
+  {
+   "id": "du2026",
+   "family": "du",
+   "variants": [
+    "autotracking"
+   ],
+   "citation": "X. Du et al., \"A 0.068mm² 8.5-to-12.7GHz Complementary Dual-Core VCO with Auto-2nd-Harmonic-Tracking Technique Achieving 202.7dBc/Hz Peak FoMT and 0.9dB-FoM Variation at a 1MHz Offset in a 39.6% Tuning Range,\" ISSCC 2026, paper 27.4.",
+   "doi": "10.1109/ISSCC49663.2026.11409041",
+   "figures": [
+    {
+     "file": "du2026_fig27_4_2.png",
+     "label": "Figure 27.4.2 (top)",
+     "pdf_page": 2,
+     "journal_page": 473,
+     "variants": [
+      "autotracking"
+     ],
+     "box": [
+      306.4,
+      518.4,
+      577.6,
+      622.4
+     ],
+     "caption": "Implicit common-mode resonance VCO versus the proposed auto-tracking dual-core VCO.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    },
+    {
+     "file": "du2026_fig27_4_3.png",
+     "label": "Figure 27.4.3 (left)",
+     "pdf_page": 3,
+     "journal_page": null,
+     "variants": [
+      "autotracking"
+     ],
+     "box": [
+      11.2,
+      30.4,
+      156.8,
+      249.6
+     ],
+     "caption": "Floorplan and circuit of the dual-core VCO with shared windings and cross capacitors.",
+     "box_units": "PDF points (72/in), origin top-left of the physical page",
+     "render_dpi": 220
+    }
+   ]
+  }
+ ]
+}

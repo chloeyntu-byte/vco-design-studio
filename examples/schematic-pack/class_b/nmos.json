@@ -1,0 +1,138 @@
+{
+ "id": "example/class_b/nmos",
+ "modules": [
+  {
+   "name": "L_TANK",
+   "cell": "IND_TANK",
+   "kind": "inductor",
+   "members": [
+    "RSLDA",
+    "LDA",
+    "RPLDA",
+    "RSLDB",
+    "LDB",
+    "RPLDB"
+   ],
+   "ports": {
+    "P": "OUTP",
+    "N": "OUTN",
+    "CT": "VDD"
+   },
+   "port_order": [
+    "P",
+    "N",
+    "CT"
+   ]
+  },
+  {
+   "name": "GM",
+   "cell": "GM",
+   "kind": "gm",
+   "members": [
+    "MN1",
+    "MN2"
+   ],
+   "ports": {
+    "OUTP": "OUTP",
+    "OUTN": "OUTN",
+    "VSS": "VSS"
+   },
+   "port_order": [
+    "OUTP",
+    "OUTN",
+    "VSS"
+   ]
+  }
+ ],
+ "rename": {
+  "ICT": "CT_MAIN"
+ },
+ "symbols": {
+  "IND_TANK": {
+   "generator": "diff_inductor",
+   "args": {
+    "ports": [
+     "P",
+     "N",
+     "CT"
+    ],
+    "title": "L_TANK"
+   }
+  },
+  "GM": {
+   "generator": "cross_pair",
+   "args": {
+    "kind": "n",
+    "pins": [
+     "OUTP",
+     "OUTN",
+     "VSS",
+     null
+    ]
+   }
+  }
+ },
+ "top": {
+  "instances": {
+   "GM": {
+    "xy": [
+     0,
+     0
+    ]
+   },
+   "L_TANK": {
+    "xy": [
+     3.0,
+     2.0
+    ]
+   },
+   "CT_MAIN": {
+    "xy": [
+     5.0,
+     -1.0
+    ]
+   },
+   "C0": {
+    "xy": [
+     8.0,
+     0.5
+    ]
+   }
+  },
+  "wires": [],
+  "labels": [],
+  "pins": {
+   "VDD": {
+    "xy": [
+     -3.0,
+     2.0
+    ],
+    "side": "L"
+   },
+   "VSS": {
+    "xy": [
+     -3.0,
+     -2.0
+    ],
+    "side": "L"
+   },
+   "OUTP": {
+    "xy": [
+     11.0,
+     1.0
+    ],
+    "side": "R"
+   },
+   "OUTN": {
+    "xy": [
+     11.0,
+     0.5
+    ],
+    "side": "R"
+   }
+  },
+  "notes": [
+   "Minimal example: instances placed in a row, every connection made by automatic label stubs."
+  ]
+ }
+}

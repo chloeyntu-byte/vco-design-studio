@@ -338,10 +338,288 @@ def main():
         generated=Path(args.generated);graph=json.loads((generated/'graph.json').read_text());binding=json.loads((generated/'binding.json').read_text())
         target={'library':args.library,'cell':args.cell,'workspace':args.workspace or binding['workspace']}
         if args.profile:target['profile']=args.profile
-        result=export(graph,binding,target,args.output,args.execute)
+        result=export_generated(generated,target,args.output,args.execute)
     else:
         result=prepare_workspace(args.receipt,args.profile,args.output,args.workspace,args.library_path)
     print(json.dumps(result,indent=2,ensure_ascii=False))
 
 
-if __name__=='__main__':main()
+
+# ---------------------------------------------------------------- layout-driven export (schematic.py)
+
+def _f(v):
+    return '%.6g' % float(v)
+
+
+def _pt(p):
+    return 'list(%s %s)' % (_f(p[0]), _f(p[1]))
+
+
+def _symbol_body(lib, cell, sym, ports):
+    import math as _m
+    b = 'cv=dbOpenCellViewByType(%s %s "symbol" "schematicSymbol" "w")\nunless(cv error("Cannot create symbol %s"))\n' % (sq(lib), sq(cell), cell)
+    xs, ys = [], []
+    for sh in sym['shapes']:
+        layer = sh.get('layer', 'device')
+        lpp = 'list(%s "drawing")' % sq(layer if layer in ('device', 'instance', 'pin') else 'device')
+        if sh['t'] == 'line':
+            b += 'dbCreateLine(cv %s list(%s))\n' % (lpp, ' '.join(_pt(p) for p in sh['pts']))
+            xs += [p[0] for p in sh['pts']]; ys += [p[1] for p in sh['pts']]
+        elif sh['t'] == 'poly':
+            b += 'dbCreatePolygon(cv %s list(%s))\n' % (lpp, ' '.join(_pt(p) for p in sh['pts']))
+            xs += [p[0] for p in sh['pts']]; ys += [p[1] for p in sh['pts']]
+        elif sh['t'] == 'rect':
+            x0, y0, x1, y1 = sh['box']
+            b += 'dbCreateRect(cv %s list(%s %s))\n' % (lpp, _pt((min(x0, x1), min(y0, y1))), _pt((max(x0, x1), max(y0, y1))))
+            xs += [x0, x1]; ys += [y0, y1]
+        elif sh['t'] == 'ellipse':
+            x0, y0, x1, y1 = sh['box']
+            b += 'dbCreateEllipse(cv %s list(%s %s))\n' % (lpp, _pt((min(x0, x1), min(y0, y1))), _pt((max(x0, x1), max(y0, y1))))
+        elif sh['t'] == 'arc':
+            x0, y0, x1, y1 = sh['box']
+            cx, cy, rx, ry = (x0 + x1) / 2, (y0 + y1) / 2, abs(x1 - x0) / 2, abs(y1 - y0) / 2
+            pts = [(cx + rx * _m.cos(_m.radians(sh['start'] + (sh['stop'] - sh['start']) * k / 12)),
+                    cy + ry * _m.sin(_m.radians(sh['start'] + (sh['stop'] - sh['start']) * k / 12))) for k in range(13)]
+            b += 'dbCreateLine(cv %s list(%s))\n' % (lpp, ' '.join(_pt(p) for p in pts))
+        elif sh['t'] == 'label':
+            text = sh['text']
+            purpose = 'label'
+            layer = 'annotate' if text.startswith('[@') and layer != 'instance' else layer
+            if text == '[@instanceName]':
+                layer = 'instance'
+            b += 'l=dbCreateLabel(cv list(%s %s) %s %s %s "R0" "stick" %s)\n' % (sq(layer), sq(purpose), _pt(sh['xy']), sq(text), sq(sh.get('just', 'centerCenter')), _f(sh.get('h', 0.0625)))
+            if text.startswith('[@'):
+                b += 'l~>labelType="NLPLabel"\n'
+    for name in ports:
+        x, y = sym['pins'][name]
+        xs.append(x); ys.append(y)
+        b += 'n=dbCreateNet(cv %s)\ntm=dbCreateTerm(n %s "inputOutput")\nf=dbCreateRect(cv list("pin" "drawing") list(%s %s))\ndbCreatePin(n f %s)\n' % (
+            sq(name), sq(name), _pt((x - 0.025, y - 0.025)), _pt((x + 0.025, y + 0.025)), sq(name))
+    if xs:
+        b += 'dbCreateRect(cv list("instance" "drawing") list(%s %s))\n' % (_pt((min(xs), min(ys))), _pt((max(xs), max(ys))))
+    b += 'dbReplaceProp(cv "instNamePrefix" "string" "I")\nunless(dbSave(cv) error("Symbol save failed %s"))\ndbClose(cv)\n' % cell
+    return b
+
+
+def build_script_layout(packaged, layout, binding, target, folder):
+    """SKILL for a packaged graph + layout (schematic.build_layout)."""
+    from .schematic import _on_segment
+    lib, top = _name(target['library']), _name(target['cell'])
+    graphs = _graphs(packaged)
+    mapping = {g['name']: (top if g is packaged else top + '_' + _name(g['name'])) for g in graphs}
+    libpath = Path(target.get('library_path', Path(folder) / 'oa' / lib)).resolve()
+    body = (ROOT / 'native/helpers.il').read_text()
+    body += '\nwhen(ddGetObj(' + sq(lib) + ') error("Refusing pre-existing target library"))\n'
+    body += 'unless(ddCreateLib(' + sq(lib) + ' ' + sq(libpath) + ') error("Cannot create private library"))\n'
+    body += 'iopinMaster=dbOpenCellViewByType("basic" "iopin" "symbol" "" "r")\n'
+    expected = []
+    # symbols first (any order: symbols reference no masters)
+    for g in graphs:
+        sym = layout['cells'][g['name']]['symbol']
+        body += _symbol_body(lib, mapping[g['name']], sym, [p['name'] for p in g['ports']])
+    for g in graphs:
+        cell = mapping[g['name']]
+        lay = layout['cells'][g['name']]['schematic']
+        body += 'cv=dbOpenCellViewByType(%s %s "schematic" "schematic" "w")\nunless(cv error("Cannot create schematic"))\n' % (sq(lib), sq(cell))
+        byname = {i['name']: i for i in g['instances']}
+        for item in lay['instances']:
+            inst = byname[item['name']]
+            _name(inst['name'])
+            if inst['role'] == 'subckt':
+                sub = next(x for x in graphs if x['name'] == inst['master'])
+                b = {'library': lib, 'cell': mapping[inst['master']], 'view': 'symbol',
+                     'terminals': {p['name']: p['name'] for p in sub.get('ports', [])},
+                     'parameter_map': {k: k for k in sub.get('parameters', {})}}
+            else:
+                b = role_binding(inst, binding)
+            if set(inst.get('nodes', {})) != set(b['terminals']):
+                raise ValueError('Terminal coverage differs for ' + inst['name'])
+            body += 'master=dbOpenCellViewByType(%s %s %s "" "r")\nunless(master error("Missing bound master"))\ni=dbCreateInst(cv master %s %s %s)\nunless(i error("Cannot create instance"))\n' % (
+                sq(b['library']), sq(b['cell']), sq(b.get('view', 'symbol')), sq(inst['name']), _pt(item['xy']), sq(item.get('orient', 'R0')))
+            for key, net in inst.get('nodes', {}).items():
+                expected.append([cell, inst['name'], b['terminals'][key], 'gnd!' if net == '0' else net])
+            for key, value in inst.get('parameters', {}).items():
+                actual = b.get('parameter_map', {}).get(key)
+                if actual is None and key in b.get('provenance', {}).get('metadata', {}).get('cdf', {}):
+                    actual = key
+                if actual is None:
+                    raise ValueError('Unmapped parameter ' + key + ' for ' + inst['name'] + ' (' + b['cell'] + ')')
+                value = _native_value(value, g.get('parameters', {}) if g is not packaged else {})
+                body += 'dbReplaceProp(i %s "string" %s)\n' % (sq(actual), sq(value))
+        segs = []
+        for w in lay['wires']:
+            for a, c in zip(w['pts'], w['pts'][1:]):
+                segs.append((a, c))
+        for k, (a, c) in enumerate(segs):
+            body += 'w%d=car(schCreateWire(cv "draw" "full" list(%s %s) 0.0625 0.0625 0.0))\nunless(w%d error("Wire creation failed"))\n' % (k, _pt(a), _pt(c), k)
+        for lab in lay['labels']:
+            k = next((k for k, (a, c) in enumerate(segs) if _on_segment(tuple(lab['xy']), tuple(a), tuple(c))), None)
+            if k is None:
+                raise ValueError('Label %s not on a wire in %s' % (lab['net'], cell))
+            net = 'gnd!' if lab['net'] == '0' else lab['net']
+            body += 'schCreateWireLabel(cv w%d %s %s %s %s "stick" 0.0625 nil)\n' % (k, _pt(lab['xy']), sq(net), sq(lab.get('just', 'lowerLeft')), sq(lab.get('orient', 'R0')))
+        for p in lay['pins']:
+            body += 'unless(schCreatePin(cv iopinMaster %s %s nil %s "R0") error("Cannot create pin %s"))\n' % (sq(p['name']), sq(p.get('direction', 'inputOutput')), _pt(p['xy']), p['name'])
+        body += 'schCheck(cv)\nunless(dbSave(cv) error("Check/save failed"))\ndbClose(cv)\n'
+        if g.get('parameters') and g is not packaged:
+            body += 'cdf=cdfCreateBaseCellCDF(ddGetObj(%s %s))\n' % (sq(lib), sq(cell))
+            for key, value in g['parameters'].items():
+                _name(key)
+                body += 'cdfCreateParam(cdf ?name %s ?type "string" ?defValue %s ?parseAsCEL "yes" ?parseAsNumber "yes")\n' % (sq(key), sq(value))
+            body += 'cdfSaveCDF(cdf)\n'
+    body += 'o=outfile(%s)\n' % sq(Path(folder) / 'connectivity.tsv')
+    for g in graphs:
+        cell = mapping[g['name']]
+        body += 'cv=dbOpenCellViewByType(%s %s "schematic" "" "r")\nunless(cv error("Reopen failed"))\nforeach(inst cv~>instances foreach(it inst~>instTerms fprintf(o "NET\\t%%s\\t%%s\\t%%s\\t%%s\\n" %s inst~>name it~>name it~>net~>name)))\nforeach(term cv~>terminals fprintf(o "PORT\\t%%s\\t%%s\\t%%s\\n" %s term~>name term~>direction))\nforeach(m cv~>markers fprintf(o "MARKER\\t%%s\\t%%s\\t%%L\\n" %s m~>severity m~>msg))\ndbClose(cv)\ncv=dbOpenCellViewByType(%s %s "symbol" "" "r")\nforeach(term cv~>terminals fprintf(o "SYMBOL\\t%%s\\t%%s\\t%%s\\n" %s term~>name term~>direction))\ndbClose(cv)\n' % (
+            sq(lib), sq(cell), sq(cell), sq(cell), sq(cell), sq(lib), sq(cell), sq(cell))
+    body += 'close(o)\n'
+    return body, expected, mapping, str(libpath)
+
+
+def probe_master_geometry(packaged, binding, workspace, folder, profile=None, cancel_event=None):
+    """Read pin centres and bounding boxes of every bound master actually used (read-only worker)."""
+    from .schematic import _master_key
+    views = {}
+    for g in _graphs(packaged):
+        for inst in g['instances']:
+            if inst['role'] != 'subckt':
+                b = role_binding(inst, binding)
+                key = _master_key(inst, binding)
+                view = b.get('view', 'symbol')
+                if views.setdefault(key, view) != view:
+                    raise ValueError('Master %s is bound with two views (%s, %s)' % (key, views[key], view))
+    keys = sorted(views)
+    out = Path(folder) / 'master-geometry.tsv'
+    body = 'o=outfile(%s)\n' % sq(out)
+    for key in keys:
+        lib, cell = key.split('/', 1)
+        body += ('cv=dbOpenCellViewByType(%s %s %s "" "r")\nunless(cv error("Missing master %s"))\n'
+                 'fprintf(o "MASTER\\t%%s\\t%%L\\n" %s cv~>bBox)\n'
+                 'foreach(tm cv~>terminals foreach(pn tm~>pins fprintf(o "PIN\\t%%s\\t%%s\\t%%L\\n" %s tm~>name if(pn~>fig pn~>fig~>bBox car(pn~>figs)~>bBox))))\n'
+                 'dbClose(cv)\n') % (sq(lib), sq(cell), sq(views[key]), key, sq(key), sq(key))
+    body += 'close(o)\n'
+    receipt = run_skill(workspace, body, Path(folder) / 'geometry-worker', profile, cancel_event=cancel_event, timeout=300)
+    nums = lambda t: [float(x) for x in re.findall(r'-?\d+(?:\.\d+)?(?:e-?\d+)?', t)]
+    geo = {}
+    for line in out.read_text().splitlines():
+        parts = line.split('\t')
+        if parts[0] == 'MASTER':
+            geo[parts[1]] = {'pins': {}, 'bbox': nums(parts[2])}
+        elif parts[0] == 'PIN':
+            v = nums(parts[3])
+            if len(v) == 4 and parts[2] not in geo[parts[1]]['pins']:
+                geo[parts[1]]['pins'][parts[2]] = [round((v[0] + v[2]) / 2, 6), round((v[1] + v[3]) / 2, 6)]
+    missing = [k for k in keys if k not in geo]
+    if missing:
+        raise RuntimeError('Master geometry probe incomplete: ' + str(missing))
+    return geo, receipt
+
+
+def relayout_with_geometry(prep, geometry):
+    """Rebuild the layout of a prepared design with probed master geometry and re-check it."""
+    from .schematic import build_layout, check_layout, master_symbols
+    base = master_symbols()
+    merged = {}
+    for key, g in geometry.items():
+        merged[key] = dict(g, shapes=base.get(key, {}).get('shapes', []) if base.get(key, {}).get('pins') == g['pins'] else [])
+    for key, g in base.items():
+        merged.setdefault(key, g)
+    layout = build_layout(prep['packaged'], prep['spec'], prep['binding'], merged)
+    conn = check_layout(layout)
+    if not conn['ok']:
+        bad = {k: v['errors'][:3] for k, v in conn['cells'].items() if not v['ok']}
+        raise ValueError('Layout with the actual master geometry fails connectivity: ' + json.dumps(bad)[:600])
+    return dict(prep, layout=layout, connectivity=conn, geometry_source='probed')
+
+
+def export_layout(prep, target, output_dir, execute=False, cancel_event=None):
+    """Native export of schematic.prepare() output; netlist is verified against the packaged graph
+    and the packaged graph is proven equivalent to the electrical graph."""
+    packaged, layout, binding = prep['packaged'], prep['layout'], prep['binding']
+    if not prep['equivalence']['equivalent']:
+        raise ValueError('Packaged hierarchy is not equivalent to the electrical graph: ' + json.dumps(prep['equivalence'])[:400])
+    if not prep['connectivity']['ok']:
+        bad = {k: v['errors'][:3] for k, v in prep['connectivity']['cells'].items() if not v['ok']}
+        raise ValueError('Layout connectivity check failed: ' + json.dumps(bad)[:600])
+    target = dict(target, workspace=target.get('workspace') or binding.get('workspace'))
+    if binding.get('unresolved'):
+        raise ValueError('PDK binding unresolved: ' + json.dumps(binding['unresolved']))
+    folder = Path(output_dir).resolve()
+    folder.mkdir(parents=True, exist_ok=True)
+    if (folder / 'native-request.json').exists():
+        raise FileExistsError('Native export already exists; select a fresh output directory')
+    if execute:
+        # pin positions differ between PDK masters: lay out with the masters actually bound
+        geometry, _probe = probe_master_geometry(packaged, binding, target['workspace'], folder,
+                                                 target.get('profile') or binding.get('profile'), cancel_event)
+        (folder / 'master-geometry.json').write_text(json.dumps(geometry, indent=1))
+        prep = relayout_with_geometry(prep, geometry)
+        layout = prep['layout']
+    body, expected, mapping, libpath = build_script_layout(packaged, layout, binding, target, folder)
+    if Path(libpath).exists():
+        raise FileExistsError('Refusing existing private library path ' + libpath)
+    from .common import electrical_hash
+    receipt = {'schema': 'vco.native.v2', 'status': 'prepared', 'target': dict(target, library_path=libpath),
+               'source_graph_hash': electrical_hash(prep['graph']), 'packaged_graph_hash': electrical_hash(packaged),
+               'packaging': prep['spec'].get('id'), 'equivalence': prep['equivalence'], 'hierarchy': mapping,
+               'expected_connections': len(expected), 'limitations': ['Seed circuit; no performance qualification implied.']}
+    (folder / 'native-request.json').write_text(json.dumps(receipt, indent=2))
+    (folder / 'build.il').write_text(body)
+    (folder / 'expected-connectivity.json').write_text(json.dumps(expected, indent=2))
+    (folder / 'packaged-graph.json').write_text(json.dumps(packaged, indent=1))
+    if not execute:
+        return receipt
+    profile = load_profile(target.get('profile') or binding.get('profile'))
+    workspace = target['workspace']
+    try:
+        Path(libpath).parent.mkdir(parents=True, exist_ok=True)
+        receipt['build'] = run_skill(workspace, body, folder / 'build-worker', profile, cancel_event=cancel_event, timeout=900)
+        receipt['readback'] = _verify_readback(folder, expected, packaged, mapping)
+        markers = [l for l in (folder / 'connectivity.tsv').read_text().splitlines() if l.startswith('MARKER')]
+        receipt['check_markers'] = markers
+        errors = [m for m in markers if m.split('\t')[2].strip('"').lower() in ('error', 'criticalerror', 'fatal')]
+        if errors:
+            raise RuntimeError('Schematic check reported errors: ' + '; '.join(errors[:5]))
+        netfolder = folder / 'netlist-worker'
+        netfolder.mkdir()
+        (netfolder / 'cds.lib').write_text('INCLUDE ' + sq(Path(workspace).resolve() / 'cds.lib') + '\nDEFINE ' + target['library'] + ' ' + sq(libpath) + '\n')
+        netbody = "envSetVal(\"asimenv.startup\" \"projectDir\" 'string %s)\nsimulator('spectre)\ndesign(%s %s \"schematic\")\nresultsDir(%s)\n" % (sq(netfolder / 'simulation'), sq(target['library']), sq(target['cell']), sq(netfolder / 'simulation'))
+        netbody += 'envOption(\'switchViewList list("spectre" "cmos_sch" "schematic" "veriloga") \'stopViewList list("spectre"))\n'
+        for key, value in packaged.get('parameters', {}).items():
+            netbody += 'desVar(%s %s)\n' % (sq(key), sq(value))
+        if binding.get('model_includes'):
+            pairs = ' '.join('list(' + sq(m['path']) + ' ' + sq(m.get('section', '')) + ')' for m in binding['model_includes'])
+            netbody += 'modelFile(' + pairs + ')\n'
+        netbody += 'net=createNetlist(?recreateAll t)\nunless(net error("Native Spectre netlisting failed"))\no=outfile(%s) fprintf(o "%%L\\n" net) close(o)\n' % sq(netfolder / 'netlist-path.txt')
+        receipt['netlisting'] = run_skill(workspace, netbody, netfolder, profile, cancel_event=cancel_event, ocean=True, timeout=600)
+        main_netlist = netfolder / 'simulation' / target['cell'] / 'spectre/schematic/netlist/netlist'
+        receipt['netlist_verification'] = verify_netlist(main_netlist, packaged, binding, mapping)
+        receipt['status'] = 'verified'
+        receipt['profile'] = profile
+        receipt['workspace_entry'] = prepare_workspace(receipt, profile, folder / 'workspace')
+    except BaseException as exc:
+        receipt['status'] = 'failed'
+        receipt['error'] = str(exc)
+        (folder / 'native-receipt.json').write_text(json.dumps(receipt, indent=2))
+        raise
+    (folder / 'native-receipt.json').write_text(json.dumps(receipt, indent=2))
+    return receipt
+
+
+def export_generated(generated, target, output_dir, execute=False, cancel_event=None, flat=False):
+    """Export a generated design directory. Uses the packaged hierarchy (schematic.py) when the
+    family/variant has a packaging spec, else the legacy flat tile export."""
+    from .schematic import prepare
+    generated = Path(generated)
+    graph = json.loads((generated / 'graph.json').read_text())
+    binding = json.loads((generated / 'binding.json').read_text())
+    project = json.loads((generated / 'project.json').read_text())
+    fam, var = project.get('family'), project.get('variant')
+    if flat or not (fam and var):
+        return export(graph, binding, target, output_dir, execute, cancel_event)
+    prep = prepare(fam, var, graph=graph, binding=binding)
+    return export_layout(prep, target, output_dir, execute, cancel_event)
+
+
+if __name__ == '__main__':
+    main()

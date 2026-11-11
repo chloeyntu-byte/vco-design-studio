@@ -218,12 +218,15 @@ class StudioApp:
         self.pages.pack(fill='both', expand=True, padx=(12, 0))
         self.viewer = CircuitViewer(self.pages)
         self.pages.add(self.viewer, text='Circuit graph')
+        from .topology_view import TopologyViewer
+        self.topology = TopologyViewer(self.pages)
+        self.pages.add(self.topology, text='Topology vs paper')
         self.guide_pages = ttk.Notebook(self.pages)
         self.pages.add(self.guide_pages, text='Architecture guide')
         self.concept = ConceptViewer(self.guide_pages)
         self.guide_pages.add(self.concept, text='Concept diagram')
         self.guide = self._text_page(self.guide_pages, 'Mechanism and qualification')
-        tools_page = ttk.Frame(self.pages, padding=12)
+        tools_page = self.tools_page = ttk.Frame(self.pages, padding=12)
         self.pages.add(tools_page, text='Analysis and outputs')
         ttk.Label(tools_page, text='Analysis uses the generated graph and a new output folder.', wraplength=600).pack(anchor='w')
         toolbar = ttk.Frame(tools_page)
@@ -406,6 +409,7 @@ class StudioApp:
             self.extra_project.pop('overrides', None)
         self.viewer.set_graph(self.current_variant['graph'])
         self.concept.set_variant(self.current_variant)
+        self.topology.set_variant(self.family_id, variant['id'], self.current_variant['graph'])
         self._build_fields()
         self._update_guide()
         self._changed()
@@ -682,11 +686,8 @@ class StudioApp:
             if not project['workspace'] or not project['target_library']:
                 return {'output': str(output), 'manifest': manifest, 'revision': revision}
             target = {'workspace': project['workspace'], 'library': project['target_library'], 'cell': project['target_cell']}
-            kwargs = {'execute': execute_native}
-            if 'cancel_event' in inspect.signature(native.export).parameters:
-                kwargs['cancel_event'] = cancel
-            log('Building in native workspace' if execute_native else 'Exporting native build scripts')
-            receipt = native.export(graph, binding, target, output, **kwargs)
+            log('Building in native workspace (packaged hierarchy, paper-style top level)' if execute_native else 'Exporting native build scripts')
+            receipt = native.export_generated(output, target, output, execute=execute_native, cancel_event=cancel)
             return {'output': str(output), 'manifest': manifest, 'native': receipt, 'revision': revision}
         self._start('Circuit generation' + (' / native build' if execute_native else ''), work, self._generated)
 
@@ -844,7 +845,7 @@ class StudioApp:
     def diagnose(self):
         details = {'schema': 'vco.ui.diagnostic.v1', 'window_id': self.window_id, 'workspace': self.workspace.get(), 'runtime': str(self.runtime), 'install_root': str(INSTALL_ROOT), 'python': __import__('sys').executable, 'tk': self.root.tk.call('info', 'patchlevel'), 'busy': self.busy, 'binding_status': self.binding.get('status', 'unresolved'), 'unresolved': self.binding.get('unresolved', []), 'generated_dir': str(self.generated_dir) if self.generated_dir else None, 'log': str(self.log_path)}
         self._set_text(self.artifacts, json.dumps(details, ensure_ascii=False, indent=2))
-        self.pages.select(2)
+        self.pages.select(self.tools_page)
         self._log('INFO', 'Diagnostics displayed; inspect missing configuration.')
 
     def _error(self, error):
