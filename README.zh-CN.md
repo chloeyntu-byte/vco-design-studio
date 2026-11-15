@@ -74,9 +74,9 @@ VCO_STUDIO_SCHEMATIC_DIR=examples/schematic-pack ./launch topology check class_b
 
 ## 可选集成（Integrations）
 
-Cap Array Lab、Z11 和 **external circuit optimizer（外部电路优化器）** 均为可选外部工具，需用户自备并配置；仓库不附带，离线浏览和生成也不依赖它们。在 `VCO_SITE` 指定的 site JSON 中，用 `tools.caplab`、`tools.z11` 和 `tools.optimizer` 设置兼容源码目录。
+Tank Scan Lab、Z11 和 **external circuit optimizer（外部电路优化器）** 均为可选外部工具，需用户自备并配置；仓库不附带，离线浏览和生成也不依赖它们。在 `VCO_SITE` 指定的 site JSON 中，用 `tools.caplab`、`tools.z11` 和 `tools.optimizer` 设置兼容源码目录。
 
-- Cap Array Lab 后处理实测双端口 Y 矩阵并导出工作簿；求解器 AC 测量由 Studio 的 `bank-ac` 执行，无源导出本身不是实测数据。
+- Tank Scan Lab 后处理实测双端口 Y 矩阵并导出工作簿；求解器 AC 测量由 Studio 的 `bank-ac` 执行，无源导出本身不是实测数据。
 - Z11 分析静态无源 RLC/互感投影，不代表完整有源振荡器或相噪。
 - 外部电路优化器需兼容的 `circuit_optimizer` 模块和显式 evaluator，后者提供状态、可行性、违例和证据；搜索结果的电气资格由 evaluator 的测量决定。
 
@@ -86,14 +86,26 @@ Cap Array Lab、Z11 和 **external circuit optimizer（外部电路优化器）*
 
 合成尺寸仅用于软件演示，不保证起振、调谐范围、相噪、可靠性或 PVT。概念图省略部分细节，电气连接以 circuit graph 为准。原生耦合电感目前要求 `analogLib/ind` 适配器，其他磁模型须增加已验证适配器。外部工具适配器依赖用户的兼容安装。稀疏代表码不能证明全频段覆盖。版图交接与验证脚手架不执行物理版图、DRC/LVS 签核或提取。本次公开版本未验证真实 EDA 执行。
 
+## 未随仓库提供的内容
+
+以下内容不随本仓库提供：
+
+- 让顶层照论文原图排布、并提供论文画法拓扑图的结构包。仓库只带一个教科书级的 Class-B 示例包，在 `examples/schematic-pack/`。
+- 真实 PDK 的器件绑定。`examples/bindings/demo_a.json` 是虚构的，请换成你自己核实过的绑定（见 [docs/BINDINGS.md](docs/BINDINGS.md)）。
+- 来自真实设计的知识、证据和查找表数据。
+- 可选的外部工具（Tank Scan Lab、Z11、外部电路优化器），以及你自己的 Cadence 和 Spectre 环境。
+
+需要其中某一项，或想为你的环境要一个示例，请在 [GitHub Issues](https://github.com/chloeyntu-byte/vco-design-studio/issues) 提出，维护者会在那里回复。
+
 ## RF-FIELDWORK
 
-产品介绍页：https://rf-fieldwork.pages.dev/vco/?lang=zh（含配音演示片的工具在页面上可直接观看）
+- 总站（全部工具、演示片与项目进展）：https://rf-fieldwork.pages.dev/?lang=zh
+- 本工具介绍页（含配音演示片）：https://rf-fieldwork.pages.dev/vco/?lang=zh
 
 其他开源工具：
 
 - [Flux Studio](https://github.com/chloeyntu-byte/flux-studio)：参数化射频无源器件、EMX 扫参、多目标优化与 SNPFit 拟合
-- [Cap Array Lab](https://github.com/chloeyntu-byte/cap-array-lab)：电容阵列 C/Q、寄生路径、谐振与 Z11
+- [Tank Scan Lab](https://github.com/chloeyntu-byte/tank-scan-lab)：LC 谐振腔扫描（f0、Rp、gm、起振裕量、损耗分摊）、电容阵列 C/Q 与谐振
 - [Layout 3D Viewer](https://github.com/chloeyntu-byte/layout-3d-viewer)：三维阅读版图、定位 pin、追踪连接
 - [VCO ISF Explorer](https://github.com/chloeyntu-byte/vco-isf-explorer)：ISF、闪烁噪声上变频与相噪贡献
 - [Crescendo](https://github.com/chloeyntu-byte/crescendo)：在 Cadence Maestro 里自动优化器件尺寸

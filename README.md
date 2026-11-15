@@ -73,9 +73,9 @@ Read [the entry skill](skills/eda-vco-design/SKILL.md) before running a design f
 
 ## Integrations
 
-Cap Array Lab, Z11 and an **external circuit optimizer** are optional external tools, supplied and configured by the user; none is bundled or required for offline browsing/generation. Set their compatible source roots under `tools.caplab`, `tools.z11` and `tools.optimizer` in the site JSON selected by `VCO_SITE`.
+Tank Scan Lab, Z11 and an **external circuit optimizer** are optional external tools, supplied and configured by the user; none is bundled or required for offline browsing/generation. Set their compatible source roots under `tools.caplab`, `tools.z11` and `tools.optimizer` in the site JSON selected by `VCO_SITE`.
 
-- Cap Array Lab postprocesses measured two-port Y matrices and exports workbooks. Studio's `bank-ac` performs the solver-based AC measurement; a passive export alone is not measured data.
+- Tank Scan Lab (formerly Cap Array Lab) postprocesses measured two-port Y matrices and exports workbooks. Studio's `bank-ac` performs the solver-based AC measurement; a passive export alone is not measured data.
 - Z11 analyzes a static passive RLC/mutual-inductance projection, not the full active oscillator or its phase noise.
 - The external circuit optimizer requires compatible `circuit_optimizer` modules and an explicit evaluator with status, feasibility, violations and evidence. A search result is electrically qualified only by its evaluator measurements.
 
@@ -85,14 +85,26 @@ Use `./launch site` to inspect configured tool roots. Missing tools make their o
 
 Synthetic geometry is for software demonstration, with no startup, tuning-range, phase-noise, reliability or PVT guarantee. Concept diagrams omit some detail; the circuit graph is authoritative. Native coupled primitives currently require the `analogLib/ind` adapter. Alternate magnetic models need a validated adapter. External tool adapters require compatible user installations. Sparse representative controls do not establish full-band coverage. Layout handoff and verification scaffolds do not perform physical layout, DRC/LVS signoff or extraction. Real EDA execution has not been validated for this public release.
 
+## Not included in this repository
+
+The following are not part of this repository:
+
+- Structure packs that lay the top level out like the source paper figure and provide the paper-style drawings. Only a textbook Class-B example pack ships, in `examples/schematic-pack/`.
+- Device bindings for a real PDK. `examples/bindings/demo_a.json` is fictional; replace it with your own verified binding (see [docs/BINDINGS.md](docs/BINDINGS.md)).
+- Knowledge, evidence and lookup data from real designs.
+- The optional external tools (Tank Scan Lab, Z11, an external circuit optimizer) and your Cadence and Spectre environment.
+
+If you need one of these, or an example for your setup, please open a [GitHub issue](https://github.com/chloeyntu-byte/vco-design-studio/issues); the maintainer will reply there.
+
 ## RF-FIELDWORK
 
-Product page: https://rf-fieldwork.pages.dev/vco/?lang=en
+- Lab home (all tools, narrated films and progress): https://rf-fieldwork.pages.dev/?lang=en
+- This tool's page (with a narrated film): https://rf-fieldwork.pages.dev/vco/?lang=en
 
 Other open-source tools:
 
 - [Flux Studio](https://github.com/chloeyntu-byte/flux-studio): parametric RF passives, EMX sweeps, multi-objective search and SNPFit
-- [Cap Array Lab](https://github.com/chloeyntu-byte/cap-array-lab): capacitor-array C/Q, parasitic paths, resonance and Z11
+- [Tank Scan Lab](https://github.com/chloeyntu-byte/tank-scan-lab): LC tank scans (f0, Rp, gm, startup margin, loss shares), capacitor-array C/Q and resonance
 - [Layout 3D Viewer](https://github.com/chloeyntu-byte/layout-3d-viewer): read IC layouts in 3D, locate pins and trace connections
 - [VCO ISF Explorer](https://github.com/chloeyntu-byte/vco-isf-explorer): ISF, flicker-noise up-conversion and phase-noise contributions
 - [Crescendo](https://github.com/chloeyntu-byte/crescendo): automatic device-size optimization inside Cadence Maestro
