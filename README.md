@@ -4,7 +4,38 @@
 
 An LC VCO topology and circuit-generation workbench for engineers and agents.
 
+> **Try the structures first:** compare and tune all five in the browser in the [VCO Structure Lab](https://rf-fieldwork.pages.dev/vco-lab/?lang=en).
+
 ![VCO Design Studio](docs/screenshots/example.png)
+
+## Try every structure online: VCO Structure Lab
+
+**Compare the five structures and tune them yourself in the browser — no install, no Cadence:**
+**https://rf-fieldwork.pages.dev/vco-lab/?lang=en**
+
+The lab puts one design of each structure on a tuning bench, backed by more than 400 harmonic-balance and
+phase-noise simulations (65 nm CMOS, inductor Q = 20). Each structure shows only the knobs it really has.
+
+[![Tuning bench: schematic, knobs, readouts and six live charts](docs/screenshots/lab-bench.png)](https://rf-fieldwork.pages.dev/vco-lab/?lang=en)
+
+- **Click an element on the schematic** (drawn after the paper and checked against the simulated netlist) to pick its
+  knob: 4-bit capacitor bank, source capacitor, tail inductor, transformer coupling, drain/gate banks, head network,
+  cross capacitor, supply.
+- **Watch the effect live**: phase-noise spectrum, FoM at 10 kHz / 100 kHz / 1 MHz, alignment maps (code × knob) and
+  the first and second resonance vs frequency. Every readout says whether it is a simulated point or an
+  interpolation.
+- **Tuning challenges** with a "Show answer" button, a six-design comparison and a performance survey across
+  5 / 10 / 20 GHz targets.
+
+| Six structures, one bench | What a knob does, across codes |
+|---|---|
+| [![Six structures](docs/screenshots/lab-structures.png)](https://rf-fieldwork.pages.dev/vco-lab/?lang=en) | [![Knob response, alignment maps, first and second peak](docs/screenshots/lab-charts.png)](https://rf-fieldwork.pages.dev/vco-lab/?lang=en) |
+| **Six designs side by side** | **Which structure fits which target** |
+| [![Compare](docs/screenshots/lab-compare.png)](https://rf-fieldwork.pages.dev/vco-lab/?lang=en) | [![Survey](docs/screenshots/lab-survey.png)](https://rf-fieldwork.pages.dev/vco-lab/?lang=en) |
+
+It also works on a phone:
+
+<img src="docs/screenshots/lab-phone.png" alt="VCO Structure Lab on a phone" width="300">
 
 ## What it does
 
@@ -100,6 +131,7 @@ If you need one of these, or an example for your setup, please open a [GitHub is
 
 - Lab home (all tools, narrated films and progress): https://rf-fieldwork.pages.dev/?lang=en
 - This tool's page (with a narrated film): https://rf-fieldwork.pages.dev/vco/?lang=en
+- VCO Structure Lab (tune the structures in the browser): https://rf-fieldwork.pages.dev/vco-lab/?lang=en
 
 Other open-source tools:
 

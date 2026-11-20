@@ -4,7 +4,32 @@
 
 面向工程师与 Agent 的 LC VCO 结构浏览和电路生成工作台。
 
+> **先去体验结构：** 在 [VCO 结构实验室](https://rf-fieldwork.pages.dev/vco-lab/) 里对照五种结构、亲手调参。
+
 ![VCO Design Studio](docs/screenshots/example.png)
+
+## 在线体验全部结构：VCO 结构实验室
+
+**在浏览器里对照五种结构、亲手调参，不用安装，也不需要 Cadence：**
+**https://rf-fieldwork.pages.dev/vco-lab/**
+
+实验室给每种结构放了一个设计在调参台上，背后是 400 多次谐波平衡 + 相噪仿真（65 nm CMOS，电感 Q = 20）。每种结构只给它真实存在的旋钮。
+
+[![调参台：电路图、旋钮、读数和六张实时图表](docs/screenshots/lab-bench.png)](https://rf-fieldwork.pages.dev/vco-lab/)
+
+- **点电路图上的元件**（按论文画法，并和仿真网表逐个端口核对过）就能选中它的旋钮：4-bit 电容阵列、源节点电容、尾电感、变压器耦合、漏/栅端阵列、头部网络、跨接电容、电源。
+- **实时看效果**：相噪谱，10 kHz / 100 kHz / 1 MHz 的 FoM，对齐地图（码 × 旋钮），一次峰和二次峰随频率的对齐。每个读数都标明是仿真点还是插值。
+- **调参挑战**带"展示答案"，还有六个设计的横向比较，以及 5 / 10 / 20 GHz 各指标下的性能摸底。
+
+| 六种结构，一个调参台 | 一个旋钮在各个码上的作用 |
+|---|---|
+| [![六种结构](docs/screenshots/lab-structures.png)](https://rf-fieldwork.pages.dev/vco-lab/) | [![FoM 随旋钮、对齐地图、一次/二次峰](docs/screenshots/lab-charts.png)](https://rf-fieldwork.pages.dev/vco-lab/) |
+| **六个设计放在一起比** | **哪种结构适合哪个指标** |
+| [![横向比较](docs/screenshots/lab-compare.png)](https://rf-fieldwork.pages.dev/vco-lab/) | [![性能摸底](docs/screenshots/lab-survey.png)](https://rf-fieldwork.pages.dev/vco-lab/) |
+
+手机上也能用：
+
+<img src="docs/screenshots/lab-phone.png" alt="手机上的 VCO 结构实验室" width="300">
 
 ## 功能
 
@@ -101,6 +126,7 @@ Tank Scan Lab、Z11 和 **external circuit optimizer（外部电路优化器）*
 
 - 总站（全部工具、演示片与项目进展）：https://rf-fieldwork.pages.dev/?lang=zh
 - 本工具介绍页（含配音演示片）：https://rf-fieldwork.pages.dev/vco/?lang=zh
+- VCO 结构实验室（在浏览器里调各个结构）：https://rf-fieldwork.pages.dev/vco-lab/
 
 其他开源工具：
 

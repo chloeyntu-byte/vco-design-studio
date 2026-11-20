@@ -170,13 +170,31 @@ def packaged_for(family, variant, graph=None):
     return packaged, full
 
 
+def dot_check(spec, graph):
+    """Dot marks on coil glyphs must agree with the signed mutual couplings of the electrical graph: two dotted
+    windings with k > 0 carry their dots on the same terminal (p or n), with k < 0 on opposite terminals."""
+    allinst = list(graph['instances']) + [i for s in graph.get('subcircuits', []) for i in s['instances']]
+    muts = [(i['parameters']['ind1'], i['parameters']['ind2'], i['parameters']['coupling'])
+            for i in allinst if i['role'] == 'mutual']
+    dots = {}
+    for g in spec['glyphs']:
+        if g['g'] == 'coil' and g.get('dot'):
+            terms = g.get('terms', DEFAULT_TERMS['coil'])
+            dots[g['ref'].split('/')[-1]] = terms['a' if g['dot'] == 'a' else 'b']
+    errors = ['%s/%s k=%+.3f but dots on %s/%s' % (a, b, k, dots[a], dots[b])
+              for a, b, k in muts if a in dots and b in dots and (dots[a] == dots[b]) != (k > 0)]
+    return {'ok': not errors, 'errors': errors}
+
+
 def check_ui(family, variant, spec=None):
     spec = spec or load_ui(family, variant)
     packaged, _ = packaged_for(family, variant)
     cell = drawing_cell(spec, packaged)
     conn = S.connectivity_check(cell)
     cov = coverage(spec, packaged)
-    return {'ok': conn['ok'] and cov['ok'], 'connectivity': conn, 'coverage': cov}
+    from .catalog import get_variant
+    dots = dot_check(spec, get_variant(family, variant)['graph'])
+    return {'ok': conn['ok'] and cov['ok'] and dots['ok'], 'connectivity': conn, 'coverage': cov, 'dots': dots}
 
 
 def papers_for(family, variant):

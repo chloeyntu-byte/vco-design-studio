@@ -162,3 +162,19 @@ class TopologyDrawingTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DotMarkTest(unittest.TestCase):
+    def test_dot_marks_follow_signed_couplings(self):
+        from vco_studio import topology_view as tv
+        graph = {'instances': [
+            {'name': 'LA', 'role': 'ind', 'nodes': {'p': 'OUTP', 'n': 'CT'}, 'parameters': {'l': 1e-10}},
+            {'name': 'LB', 'role': 'ind', 'nodes': {'p': 'OUTN', 'n': 'CT'}, 'parameters': {'l': 1e-10}},
+            {'name': 'K', 'role': 'mutual', 'nodes': {}, 'parameters': {'ind1': 'LA', 'ind2': 'LB', 'coupling': -0.4}}]}
+        coil = lambda ref, dot: {'g': 'coil', 'ref': ref, 'at': [0, 0], 'dot': dot}
+        good = {'glyphs': [coil('L/LA', 'a'), coil('L/LB', 'b')]}      # opposite ends for k < 0
+        bad = {'glyphs': [coil('L/LA', 'a'), coil('L/LB', 'a')]}       # same end: wrong for k < 0
+        self.assertTrue(tv.dot_check(good, graph)['ok'])
+        r = tv.dot_check(bad, graph)
+        self.assertFalse(r['ok'])
+        self.assertEqual(len(r['errors']), 1)

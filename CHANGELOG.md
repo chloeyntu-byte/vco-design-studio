@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.1.1
+
+- Topology drawings: dot (same-polarity) marks on coils are now checked against the signed mutual couplings of the
+  electrical graph (`topology_view.dot_check`, part of `launch topology check`): two dotted windings with k > 0 must
+  have their dots on the same terminal, with k < 0 on opposite terminals. A wrongly dotted drawing fails the check.
+- README: a section and a picture gallery for the VCO Structure Lab, an online tuning bench where the five structures
+  can be compared and tuned in the browser (https://rf-fieldwork.pages.dev/vco-lab/?lang=en).
+
 ## v1.1.0
 
 - Schematic packaging (`vco_studio/schematic.py`, `docs/SCHEMATIC.md`): every generated design is packaged into a reusable hierarchy with readable instance names and drawn symbols — one-turn winding inductor symbols whose pins stay compatible with an EM n-port view, cross-coupled gm, bias, switched-capacitor arrays, units and inverter — and a top-level plan. Per-variant packaging, plans and topology drawings come from user-provided structure packs (`VCO_STUDIO_SCHEMATIC_DIR`, example in `examples/schematic-pack/`); without a pack the packaging is derived from the circuit graph and laid out automatically. A flattened-netlist equivalence check and a geometric connectivity check run before any OA is written.

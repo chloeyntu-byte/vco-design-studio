@@ -1,4 +1,20 @@
-# VCO Design Studio v1.1.0
+# VCO Design Studio v1.1.1
+
+**Compare and tune the five structures in your browser: [VCO Structure Lab](https://rf-fieldwork.pages.dev/vco-lab/?lang=en).**
+Each structure sits on a tuning bench backed by more than 400 harmonic-balance and phase-noise simulations
+(65 nm CMOS, inductor Q = 20): click an element on the schematic, move its knob and watch phase noise, FoM,
+alignment maps and the first and second resonance respond. The README now has a gallery of the lab.
+
+Changes in this release:
+- `launch topology check` now also verifies that the dot marks on coils agree with the signs of the mutual couplings.
+- README gallery and links for the VCO Structure Lab.
+
+Product page and narrated film: https://rf-fieldwork.pages.dev/vco/
+
+---
+
+## Previous release: v1.1.0
+
 
 v1.1.0 adds a packaged schematic hierarchy, layout-driven native export and a "Topology vs paper" page.
 
