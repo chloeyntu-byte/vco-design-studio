@@ -1,6 +1,6 @@
 {
   "schema": "vco.project.v1",
-  "family": "murphy",
+  "family": "class_b",
   "variant": "nmos",
   "binding": "demo_a",
   "parameters": {
@@ -18,11 +18,7 @@
   "registers": {
     "main": {
       "bits": 4,
-      "value": 7
-    },
-    "aux": {
-      "bits": 4,
-      "value": 13
+      "value": 0
     }
   },
   "simulation": {
@@ -32,7 +28,7 @@
   },
   "workspace": "",
   "target_library": "",
-  "target_cell": "VCO_murphy_nmos",
+  "target_cell": "VCO_class_b_nmos",
   "inherited": [
     "temp_c"
   ]

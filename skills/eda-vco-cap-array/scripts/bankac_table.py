@@ -136,7 +136,7 @@ def cfix_report(rows, spec, bits):
            'tank_C_ratio': r, 'C_fix_fF': c_fix, 'TR_pct': tr(f_on, f_off) * 100, 'predictions': []}
     if bits:
         n = 2 ** bits - 1
-        du = (on['C_fF'] - off['C_fF']) / n
+        delta_unit = (on['C_fF'] - off['C_fF']) / n
         center = (f_on + f_off) / 2
         for b in range(max(1, bits - 2), min(12, bits + 2) + 1):
             k = (2 ** b - 1) / float(n)
@@ -147,7 +147,7 @@ def cfix_report(rows, spec, bits):
             out['predictions'].append({
                 'bits': b, 'units': 2 ** b - 1, 'TR_pct': tr(lo, hi) * 100,
                 'f_lo_GHz_same_L': lo, 'f_hi_GHz_same_L': hi, 'L_multiplier_to_recenter': (1 / s) ** 2,
-                'max_step_MHz_equal_units': hi * s * (1 - (1 + du / ctot_off) ** -0.5) * 1e3,
+                'max_step_MHz_equal_units': hi * s * (1 - (1 + delta_unit / ctot_off) ** -0.5) * 1e3,
                 'step_lower_bound_MHz': (hi - lo) * s / (2 ** b - 1) * 1e3})
     return out
 

@@ -18,6 +18,7 @@ import math
 from pathlib import Path
 
 
+from .catalog import available_variants
 from .common import ROOT, read_json, write_json
 
 LOOKUP_DIR = ROOT / 'data' / 'lookup'
@@ -55,14 +56,14 @@ def rank(pdk, f0_hz, p_mw, pn_target_1m=None, results=None, allow_aux=True):
     from .spec import canonical_pdk
     pdk = canonical_pdk(pdk)
     rows = [r for r in (results if results is not None else table_results()) if r['cell']['pdk'] == pdk]
+    eligible = available_variants(allow_aux)
     fams = {}
     for r in rows:
         key = (r['cell']['family'], r['cell']['variant'])
-        fams.setdefault(key, []).append(r)
+        if key in eligible:
+            fams.setdefault(key, []).append(r)
     out = []
     for (family, variant), recs in fams.items():
-        if not allow_aux and family in ('hegazi', 'murphy', 'lim'):
-            continue
         near = sorted(recs, key=lambda r: _dist(r['cell'], f0_hz, p_mw))
         best = near[0]
         d = _dist(best['cell'], f0_hz, p_mw)
@@ -192,7 +193,7 @@ def table_rows(results, pdk=None):
                         'gain_class': g.get('class') if gvalid else 'invalid' if g else None, 'swing_max_v': sw.get('max_amp_v'), 'swing_min_v': sw.get('min_amp_v'),
                         'swing_limit_v': sw.get('limit_v'), 'core_type': sw.get('core_type')})
         seen, uniq = set(), []
-        for d in core:            # one entry per distinct device (type + size): a pair shows once, Lim MP and MN both
+        for d in core:            # one entry per distinct device type and size
             k = (d['type'], d['w_finger_um'], d['nf'], d['m'], d['l_um'])
             if k not in seen:
                 seen.add(k)
@@ -311,15 +312,16 @@ def cli_dispatch(args):
             if not (args.pdk and args.frequency_ghz and args.power_mw):
                 raise ValueError('give --spec/--task or --pdk --frequency-ghz --power-mw')
             pdk, f0, p, pn = args.pdk, args.frequency_ghz * 1e9, args.power_mw, args.pn_1m
-        ranking = rank(pdk, f0, p, pn, allow_aux=(spec or {}).get('allow_aux', True))
+        allow_aux = (spec or {}).get('allow_aux', True)
+        ranking = rank(pdk, f0, p, pn, allow_aux=allow_aux)
         from .evidence import query, default_indexes, compact
-        ev = compact(query(default_indexes(), pdk=pdk, frequency_hz=f0, power_mw=p, temp_c=27))
+        ev = compact(query(default_indexes(), pdk=pdk, frequency_hz=f0, power_mw=p, temp_c=27,
+                           eligible_variants=available_variants(allow_aux)))
         out = {'request': {'pdk': pdk, 'f0_ghz': f0 / 1e9, 'power_mw': p, 'pn_1m_target': pn},
                'lookup_ranking': ranking,
                'evidence_nearby': {'status': ev['status'], 'best_per_architecture': ev['best_per_architecture'], 'near_misses': ev['near_misses'][:5]},
-               'how_to_use': 'Shortlist 1-2 families with the best measured FoM and positive margin; seed them (launch seed) and measure. '
-                             'A negative margin means the target is beyond the best design found so far for that family at this cell: '
-                             'pick a stronger family or relax the spec. Table conditions: ' + _table_note()}
+               'how_to_use': 'Compare catalog variants using the measured FoM and margin. Use launch seed to prepare and measure a candidate. '
+                             'An empty ranking means no matching lookup cells are available. Table conditions: ' + _table_note()}
         if getattr(args, 'task', None):
             from .knowledge import consult
             out['knowledge'] = consult(args.task, 'selection', {'pdk': pdk, 'frequency_ghz': f0 / 1e9, 'power_mw': p, 'stage': 'selection'})['cards']
@@ -337,6 +339,7 @@ def cli_dispatch(args):
             for k, v in s.get('registers', {}).items():
                 if k in project['registers']:
                     project['registers'][k].update(v)
+            project['seed'] = {'source_cell': s['source'], 'note': 'L/C rescaled by (f_cell/f0)^2 split evenly; power knob scaled for voltage-biased cores; measure and re-center'}
             if s.get('overrides'):
                 project['overrides'] = s['overrides']
                 project['seed']['overrides_unscaled'] = sorted(s['overrides'])
@@ -344,7 +347,6 @@ def cli_dispatch(args):
             from .autosize import VDC_KNOB
             if (args.family, project['variant']) in VDC_KNOB:
                 project['seed']['note'] += '; vdc (tail/gate bias) copied from the source design: retune it for the power target (power is nonlinear in vdc)'
-            project['seed'] = {'source_cell': s['source'], 'note': 'L/C rescaled by (f_cell/f0)^2 split evenly; power knob scaled for voltage-biased cores; measure and re-center'}
         else:
             project['seed'] = {'source_cell': None, 'note': 'no measured design for this family/PDK yet; template sizing'}
         from .autosize import _legalize, _legal

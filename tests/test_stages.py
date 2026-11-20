@@ -52,7 +52,7 @@ Path('spectre.log').write_text('Offline PSF replay stub; no circuit was solved.\
                                           'VCO_TEST_PSF': str(FIXTURES.resolve()), 'VCO_TEST_CALLS': str(self.root / 'calls'),
                                           'PYTHONDONTWRITEBYTECODE': '1'})
         self.env.start(); site.reset_cache()
-        self.project = default_project('guo', 'wideband')
+        self.project = default_project('class_b', 'nmos')
         binding = read_json(ROOT / 'examples/bindings/demo_a.json')
         binding['model_includes'] = [{'path': str(self.model), 'section': 'tt'}, {'path': str(self.model), 'section': 'res_tt'}]
         for role in binding['roles'].values():
@@ -282,7 +282,7 @@ Path('spectre.log').write_text('Offline PSF replay stub; no circuit was solved.\
 
     def test_frozen_delivery_hashes_cards_states_and_tamper_rejection(self):
         freeze = self.frozen()
-        (self.task / 'DECISIONS.md').write_text('Chose Guo for fixed return network.\n')
+        (self.task / 'DECISIONS.md').write_text('Chose Class-B for direct source return.\n')
         (self.task / 'knowledge').mkdir()
         (self.task / 'knowledge/consults.jsonl').write_text(json.dumps({'cards': ['card-alpha', 'card-beta']}) + '\n')
         stages.verify(self.task, 'pvt', corners=('tt',), temps=(27,), vdd_pct=(0,), dry_run=True)
@@ -291,7 +291,7 @@ Path('spectre.log').write_text('Offline PSF replay stub; no circuit was solved.\
         self.assertFalse(data['provisional'])
         self.assertEqual(data['knowledge_card_ids'], ['card-alpha', 'card-beta'])
         self.assertEqual(data['verification']['pvt']['status'], 'prepared')
-        self.assertIn('Chose Guo', (dest / 'report.md').read_text())
+        self.assertIn('Chose Class-B', (dest / 'report.md').read_text())
         self.assertIn('not_started', (dest / 'report.md').read_text())
         for name, digest in data['files'].items():
             self.assertEqual(sha256(dest / name), digest)

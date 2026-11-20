@@ -34,10 +34,7 @@ from pathlib import Path
 
 from .common import ROOT, read_json, write_json
 
-VDC_KNOB = {('hegazi', 'tail'), ('hegazi', 'top'), ('class_b', 'tail'), ('guo', 'wideband')}
-PMOS_BIAS = {('hegazi', 'top')}
-PRIMARY = [('hegazi', 'tail'), ('murphy', 'nmos'), ('lim', 'inverse_f'), ('guo', 'wideband'),
-           ('du', 'autotracking'), ('class_b', 'tail')]
+VDC_KNOB = {('class_b', 'tail')}
 
 
 class BudgetExhausted(RuntimeError):
@@ -221,7 +218,6 @@ class PowerKnob:
     def __init__(self, cell, project):
         key = (cell['family'], cell['variant'])
         self.kind = 'vdc' if key in VDC_KNOB else 'core_width_scale'
-        self.direction = -1 if key in PMOS_BIAS else 1
         self.vdd = float(project['parameters']['vdd'])
         self.points = []
 
@@ -235,16 +231,16 @@ class PowerKnob:
         """Return the next knob value; secant on (knob, P) when two points exist."""
         x = self.get(project)
         if failed:
-            new = x + 0.08 * self.direction if self.kind == 'vdc' else x * 1.4
+            new = x + 0.08 if self.kind == 'vdc' else x * 1.4
         elif len(self.points) >= 2:
             (x1, p1), (x2, p2) = sorted(self.points, key=lambda t: abs(t[1] - target))[:2]
             if abs(p2 - p1) < 1e-6:
-                new = x * (target / power) if self.kind != 'vdc' else x + 0.05 * self.direction * (1 if target > power else -1)
+                new = x * (target / power) if self.kind != 'vdc' else x + 0.05 * (1 if target > power else -1)
             else:
                 new = x1 + (target - p1) * (x2 - x1) / (p2 - p1)
         else:
             if self.kind == 'vdc':
-                new = x + self.direction * max(min(0.25 * (target / power - 1), 0.12), -0.12)
+                new = x + max(min(0.25 * (target / power - 1), 0.12), -0.12)
             else:
                 new = x * (target / power) ** 0.9
         if self.kind == 'vdc':
@@ -674,10 +670,10 @@ def _swing(ev, ctype, vdd):
     from .sizing import swing_limit_v
     if not ev or not ev.get('rows'):
         return
-    lim = swing_limit_v(ctype, vdd)
+    limit = swing_limit_v(ctype, vdd)
     amax = max(x['amp_v'] for x in ev['rows'])
     amin = min(x['amp_v'] for x in ev['rows'])
-    ev['swing'] = {'core_type': ctype, 'limit_v': lim, 'max_amp_v': amax, 'min_amp_v': amin, 'max_over_limit': amax / lim}
+    ev['swing'] = {'core_type': ctype, 'limit_v': limit, 'max_amp_v': amax, 'min_amp_v': amin, 'max_over_limit': amax / limit}
 
 
 def autosize(cell, workdir, budget=44, seed=None, log=None, timeout_s=300, lock_command=None, gain=True):
@@ -941,7 +937,7 @@ def cli_register(sub):
     c.add_argument('--output', required=True)
     c = sub.add_parser('campaign', help='run a grid of autosize cells in background workers (lookup-table builder)',
                        description='run a grid of autosize cells in background workers (lookup-table builder)')
-    c.add_argument('grid', help='grid JSON: {pdks, families:["hegazi/tail",...], freqs_ghz, powers_mw, tr_min, main_bits, q_target}')
+    c.add_argument('grid', help='grid JSON: {pdks, families:["class_b/tail",...], freqs_ghz, powers_mw, tr_min, main_bits, q_target}')
     c.add_argument('--outdir', required=True)
     c.add_argument('--budget', type=int, default=44)
     c = sub.add_parser('campaign-worker', help=argparse_suppress())

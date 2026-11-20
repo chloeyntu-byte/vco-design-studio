@@ -62,10 +62,6 @@ def register_definitions(variant):
         name = definition.get('name', '')
         bank = 'aux' if role in ('aux', 'harmonic', 'auxiliary', '2f') or 'aux' in name.lower() else 'main'
         result.setdefault(bank, definition)
-    # Fixed Guo and intrinsic Du tracking never gain an independent aux control.
-    family = variant.get('family', variant.get('graph', {}).get('family'))
-    if family in ('guo', 'du'):
-        result.pop('aux', None)
     return result
 
 
@@ -220,7 +216,7 @@ class StudioApp:
         self.pages.add(self.viewer, text='Circuit graph')
         from .topology_view import TopologyViewer
         self.topology = TopologyViewer(self.pages)
-        self.pages.add(self.topology, text='Topology vs paper')
+        self.pages.add(self.topology, text='Topology')
         self.guide_pages = ttk.Notebook(self.pages)
         self.pages.add(self.guide_pages, text='Architecture guide')
         self.concept = ConceptViewer(self.guide_pages)
@@ -315,8 +311,8 @@ class StudioApp:
     def load_example(self):
         if self.busy:
             return
-        from .catalog import default_project
-        self.apply_project(default_project('murphy', 'nmos', 'demo_a'))
+        from .common import read_json
+        self.apply_project(read_json(INSTALL_ROOT / 'examples/project.json'))
         self.empty_state.place_forget()
         self.root.title('VCO Design Studio — Synthetic example')
         self.status.set('Loaded synthetic example; no simulation evidence')
@@ -459,7 +455,7 @@ class StudioApp:
             main_bits = int(self.register_vars.get('main', (tk.StringVar(value='4'),))[0].get())
             self.ac_codes.set('0,' + str(2**main_bits-1))
         if 'aux' not in definitions:
-            ttk.Label(self.register_frame, text='No auxiliary control; fixed or intrinsic tracking network', wraplength=290, foreground=fw.DIM).grid(row=8, column=0, sticky='w', pady=(8, 0))
+            ttk.Label(self.register_frame, text='Main tuning only', wraplength=290, foreground=fw.DIM).grid(row=8, column=0, sticky='w', pady=(8, 0))
 
     def _update_guide(self):
         v = self.current_variant
@@ -501,10 +497,13 @@ class StudioApp:
     def apply_project(self, project):
         if project.get('schema') != 'vco.project.v1':
             raise ValueError('Expected a vco.project.v1 project')
+        from .catalog import get_variant
+        family = project['family']
+        variant = get_variant(family, project.get('variant'))['id']
         self._loading = True
         try:
-            self._choose_family(project['family'])
-            match = next(i for i, v in enumerate(self.variants) if v['id'] == project['variant'])
+            self._choose_family(family)
+            match = next(i for i, v in enumerate(self.variants) if v['id'] == variant)
             self.variant_box.current(match)
             self._choose_variant()
             for key, value in project.get('parameters', {}).items():

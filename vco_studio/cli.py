@@ -71,13 +71,15 @@ def build_parser():
     c = cmd('spec-check', 'validate a spec JSON and print the normalized form + warnings')
     c.add_argument('spec')
     cmd('spec-fields', 'list every spec field with type and meaning')
-    cmd('catalog', 'list the five topology families and their variants')
+    cmd('catalog', 'list available topology families and variants')
     c = cmd('bindings', 'list fictional example bindings; user bindings are configured separately')
     c.add_argument('--pdk')
     cmd('baselines', 'list synthetic Class-B example baselines (not measured)')
     c = cmd('describe', 'describe one family/variant (mechanism, controls, defaults)')
     c.add_argument('family')
-    c.add_argument('--variant')
+    variant = c.add_mutually_exclusive_group()
+    variant.add_argument('variant_positional', nargs='?', metavar='variant')
+    variant.add_argument('--variant')
 
     c = cmd('evidence-query', 'find measured points near a condition; returns matches, peaks, and nearest excluded points with their deltas')
     c.add_argument('--architecture')
@@ -266,7 +268,7 @@ def dispatch(args):
         return list_reference_baselines(), EXIT_OK
     if c == 'describe':
         from .catalog import get_variant
-        out = get_variant(args.family, args.variant)
+        out = get_variant(args.family, args.variant or args.variant_positional)
         out.pop('graph', None)
         return out, EXIT_OK
     if c == 'evidence-query':

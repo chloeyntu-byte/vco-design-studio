@@ -58,7 +58,7 @@ while not (control/'release').exists() and time.monotonic()<deadline:time.sleep(
 raise SystemExit(7)
 ''')
         self.solver.chmod(0o700)
-        self.project={'family':'murphy','variant':'nmos','tools':{'spectre':str(self.solver),'native_env':str(self.root/'no-environment-script')}}
+        self.project={'family':'class_b','variant':'nmos','tools':{'spectre':str(self.solver),'native_env':str(self.root/'no-environment-script')}}
         self.workspace=self.root/'task';self.create_state(self.workspace)
         self.flow=load_flow();self.flow.add_candidate(self.workspace,self.project)
 

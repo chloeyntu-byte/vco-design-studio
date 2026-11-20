@@ -22,7 +22,7 @@ class ThemeSmokeTests(unittest.TestCase):
                 app.load_example()
                 root.update()
                 self.assertFalse(app.empty_state.winfo_ismapped())
-                self.assertEqual(app.family_id, 'murphy')
+                self.assertEqual(app.family_id, 'class_b')
                 self.assertTrue(app.viewer.canvas.find_all())
             finally:
                 root.destroy()

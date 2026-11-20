@@ -171,12 +171,12 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(code, 0, err)
 
     def test_temp_conflict_rejected_and_spec_project_ok(self):
-        code, _, _ = run_cli('project', 'hegazi', '--variant', 'tail', '--output', str(self.tmp / 'ref.json'))
+        code, _, _ = run_cli('project', 'class_b', '--variant', 'tail', '--output', str(self.tmp / 'ref.json'))
         self.assertEqual(code, 0)
         code, _, err = run_cli('flow-add', str(self.tmp / 'task'), '--project', str(self.tmp / 'ref.json'), '--reason', 'x')
         self.assertEqual(code, 2)
         self.assertIn('temp_c', err)
-        code, _, err = run_cli('project', 'hegazi', '--variant', 'tail', '--spec', str(self.tmp / 'spec.json'), '--output', str(self.tmp / 'ok.json'))
+        code, _, err = run_cli('project', 'class_b', '--variant', 'tail', '--spec', str(self.tmp / 'spec.json'), '--output', str(self.tmp / 'ok.json'))
         self.assertEqual(code, 0, err)
         code, out, err = run_cli('flow-add', str(self.tmp / 'task'), '--project', str(self.tmp / 'ok.json'), '--reason', 'x')
         self.assertEqual(code, 0, err)
@@ -243,7 +243,7 @@ class GeometryTests(unittest.TestCase):
     def test_mim_minimum_enforced_and_legal_scaling(self):
         from vco_studio.catalog import default_project
         from vco_studio.autosize import _legal, _scale_param_legal
-        p = default_project('hegazi', 'tail', 'demo_c')
+        p = default_project('class_b', 'tail', 'demo_c')
         self.assertTrue(_legal(p))
         p['parameters']['bank_cap_scale'] = 0.40
         self.assertFalse(_legal(p))
@@ -255,7 +255,7 @@ class GeometryTests(unittest.TestCase):
     def test_width_beyond_finger_limit_uses_more_fingers(self):
         from vco_studio.catalog import default_project
         from vco_studio.generator import make_graph
-        p = default_project('hegazi', 'tail', 'demo_a')
+        p = default_project('class_b', 'tail', 'demo_a')
         p['parameters']['core_width_scale'] = 4
         g, _ = make_graph(p)
         mn1 = next(i for i in g['instances'] if i['name'] == 'MN1')
@@ -304,7 +304,7 @@ class GuessRecoveryTests(unittest.TestCase):
         (tmp / 'spec.json').write_text(json.dumps({'pdk': 'demo_a', 'center_hz': 11e9, 'tr_min_pct': 10, 'power_max_mw': 5,
                                                    'budget': {'solver_processes': 6}}))
         run_cli('flow-init', '--spec', str(tmp / 'spec.json'), '--workspace', str(tmp / 'task'), env={'VCO_KB_COMMAND': '/bin/false'})
-        run_cli('project', 'hegazi', '--variant', 'tail', '--spec', str(tmp / 'spec.json'), '--output', str(tmp / 'p.json'))
+        run_cli('project', 'class_b', '--variant', 'tail', '--spec', str(tmp / 'spec.json'), '--output', str(tmp / 'p.json'))
         run_cli('flow-add', str(tmp / 'task'), '--project', str(tmp / 'p.json'), '--reason', 'x', env={'VCO_KB_COMMAND': '/bin/false'})
         state = json.loads((tmp / 'task' / 'task.json').read_text())
         cand = state['candidates'][0]
@@ -334,7 +334,7 @@ class GuessRecoveryTests(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp(prefix='vco-recov2-'))
         (tmp / 'cand').mkdir()
         from vco_studio.catalog import default_project
-        (tmp / 'cand' / 'project.json').write_text(json.dumps(default_project('hegazi', 'tail', 'demo_a')))
+        (tmp / 'cand' / 'project.json').write_text(json.dumps(default_project('class_b', 'tail', 'demo_a')))
         with mock.patch('vco_studio.simulator.is_guess_failure', return_value=True), \
              mock.patch('vco_studio.simulator.dc_power_mw', return_value=0.4):
             note = flow._recover_guess(tmp, state, {'id': 'c', 'directory': str(tmp / 'cand'), 'results': []}, {'status': 'failed', 'path': str(tmp)}, 300)

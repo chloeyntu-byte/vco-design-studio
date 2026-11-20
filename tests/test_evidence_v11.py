@@ -6,8 +6,8 @@ from vco_studio.catalog import default_project,list_families
 from vco_studio.generator import make_graph,validate_graph
 
 class EvidenceTests(unittest.TestCase):
- def test_baseline_is_separate_real_bank(self):
-  self.assertEqual(len(list_families()),5)
+ def test_catalog_baseline_has_real_bank(self):
+  self.assertEqual([family['id'] for family in list_families()], ['class_b'])
   g,p=make_graph(default_project('class_b'))
   self.assertTrue(validate_graph(g,p['binding'])['valid'])
   self.assertEqual(set(p['registers']),{'main'})
@@ -57,8 +57,10 @@ class AuditTests(unittest.TestCase):
    second=dict(point,id='b',controls={'main':1},frequency_hz=2e9,fom_db={'1000000':170});band['point_ids'].append('b');path.write_text(json.dumps([band]))
    accepted,rejected=qualify_bands([path],[point,second],'1000000');self.assertEqual(accepted[0]['worst_fom_db'],170)
  def test_tail_has_direct_current_source_and_no_aux(self):
-  g,p=make_graph(default_project('class_b','tail'));by={i['name']:i for i in g['instances']}
-  self.assertEqual(by['MB']['nodes']['d'],'S');self.assertNotIn('LT',by);self.assertNotIn('CB',by);self.assertEqual(set(p['registers']),{'main'})
+  graph,project=make_graph(default_project('class_b','tail'))
+  source_connections={(i['name'], pin) for i in graph['instances'] for pin, net in i['nodes'].items() if net=='S'}
+  self.assertEqual(source_connections,{('MB','d'),('MN1','s'),('MN2','s')})
+  self.assertEqual(set(project['registers']),{'main'})
  def test_same_named_model_different_source_requires_policy(self):
   from vco_studio.common import read_json,ROOT
   b=read_json(ROOT/'examples/bindings/demo_a.json');b['model_includes']=[{'path':'/tmp/other-process.scs','section':'tt'}]
@@ -100,7 +102,7 @@ class UserEvidenceConfigurationTests(unittest.TestCase):
           'main_bits':4,'physical_id':'example','real_bank':True,'q_at_f0':20,
           'controls':{'main':0},'source':{'hashes':{'raw':'test-only'}},'fom_db':{'1000000':180}}
    (root/'measurements.jsonl').write_text(json.dumps(point)+'\n')
-   failure={'pdk':'demo_a','architecture':'hegazi','variant':'tail',
+   failure={'pdk':'demo_a','architecture':'class_b','variant':'tail',
             'target':{'frequency_ghz':4,'power_mw':4},'failure_class':'no_oscillation'}
    (root/'failures.jsonl').write_text('\n'.join(json.dumps(row) for row in (
        failure,dict(failure,pdk='demo_b'),dict(failure,target={'frequency_ghz':8,'power_mw':4}))))

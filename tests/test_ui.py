@@ -7,6 +7,7 @@ import time
 import tkinter as tk
 import unittest
 
+from synthetic_topology import with_two_banks
 from vco_studio import catalog
 from vco_studio.drawing import connectivity, graph_views, concept_model
 from vco_studio.ui import StudioApp, read_json, register_definitions, runtime_root, save_json
@@ -14,14 +15,14 @@ from vco_studio.ui import StudioApp, read_json, register_definitions, runtime_ro
 
 class UIDataTests(unittest.TestCase):
     def test_real_catalog_controls_and_networks(self):
-        self.assertEqual(len(catalog.list_families()), 5)
+        self.assertEqual([f['id'] for f in catalog.list_families()], ['class_b'])
         for family in catalog.list_families():
             for entry in family['variants']:
                 variant = catalog.get_variant(family['id'], entry['id'])
                 before = copy.deepcopy(variant)
                 controls = register_definitions(variant)
                 self.assertIn('main', controls)
-                self.assertEqual('aux' in controls, family['id'] not in ('guo', 'du'))
+                self.assertEqual(set(controls), {'main'})
                 overview = concept_model(variant)
                 original = {item['name']: item for item in variant['graph']['instances']}
                 for item in overview['components']:
@@ -35,11 +36,17 @@ class UIDataTests(unittest.TestCase):
                             self.assertIn((instance['name'], terminal), nets[str(net)])
                 self.assertEqual(variant, before)
 
+    def test_controllable_register_definitions(self):
+        variant = with_two_banks()
+        self.assertEqual(set(register_definitions(variant)), {'main', 'aux'})
+        variant['graph']['registers'][1]['controllable'] = False
+        self.assertEqual(set(register_definitions(variant)), {'main'})
+
     def test_atomic_project_backup(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder)/'project.json'
-            first = {'schema':'vco.project.v1', 'family':'du'}
-            second = dict(first, variant='autotracking')
+            first = {'schema':'vco.project.v1', 'family':'class_b'}
+            second = dict(first, variant='tail')
             save_json(path, first)
             save_json(path, second)
             self.assertEqual(read_json(path, 'vco.project.v1'), second)
@@ -87,7 +94,12 @@ class ActualTkTests(unittest.TestCase):
                 self.app._choose_variant()
                 self.root.update()
                 self.assertEqual(self.app.variant_id.get(), entry['id'])
-                self.assertEqual('aux' in self.app.register_vars, family['id'] not in ('guo','du'))
+                self.assertEqual(set(self.app.register_vars), {'main'})
+                labels = {self.app.concept.canvas.itemcget(item, 'text')
+                          for item in self.app.concept.canvas.find_withtag('label')}
+                self.assertIn('MN1 nmos', labels)
+                self.assertIn('ICT / main', labels)
+                self.assertEqual('MB nmos' in labels, entry['id'] == 'tail')
                 self.assertTrue(self.app.viewer.canvas.find_all())
                 p = self.app.collect_project()
                 p['registers']['main'] = {'bits':3,'value':2}

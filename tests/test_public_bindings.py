@@ -20,7 +20,7 @@ class UserBindingTests(unittest.TestCase):
                 site.reset_cache()
                 try:
                     spec,_=validate({'pdk':'my_devices','frequency_band_hz':[7e9,9e9],'power_max_mw':5,'vdd_v':1.1})
-                    project=default_project('murphy','nmos',spec=spec)
+                    project=default_project('class_b','nmos',spec=spec)
                     graph,resolved=make_graph(project)
                     self.assertEqual(project['pdk'],'my_devices')
                     self.assertEqual(project['parameters']['vdd'],1.1)

@@ -6,12 +6,6 @@ from .catalog import get_variant,default_project
 from .site import resolve as resolve_path
 
 
-# HB start-up initial conditions per family: node -> (DC reference, sign of the 0.5 mV kick) in the oscillating mode
-IC_RULES={
-    'guo':{'OUTP':('vdc',1),'OUTN':('vdc',-1),'DUT.DP':('vdd',-1),'DUT.DN':('vdd',1)},
-    'du':{'OUTP':('cm',1),'OUTN':('cm',-1),'DUT.N2':('cm',1),'DUT.N1':('cm',-1)},
-}
-
 def resolve_project(project):
     base=default_project(project['family'],project.get('variant'));base.update({k:v for k,v in project.items() if k not in ['parameters','registers']})
     base['parameters'].update(project.get('parameters',{}))
@@ -75,9 +69,9 @@ def make_graph(project):
                     after={k:evaluate_expression(v) for k,v in seed.items()}
                     for k in ['l','w','nf','m']:
                         if binding.get('geometry_policy')!='target_seed' and k in before and k in binding.get('netlist_parameter_map',{}):after[k]=before[k]
-                    for k,lim in binding.get('limits',{}).items():
-                        if k in after and isinstance(lim,list) and len(lim)==2:
-                            lo,hi=lim
+                    for k,limits_range in binding.get('limits',{}).items():
+                        if k in after and isinstance(limits_range,list) and len(limits_range)==2:
+                            lo,hi=limits_range
                             if lo is not None:after[k]=max(after[k],lo)
                             if hi is not None:after[k]=min(after[k],hi)
                 inst['parameters']=after;inst['target_model']=binding['model']
@@ -149,9 +143,9 @@ def validate_graph(graph,binding):
                 limits=b.get('limits',binding.get('limits',{}).get(role,{}))
                 if b.get('model')!=inst.get('source_model'):
                     warnings.append(label+': migrated model; use target defaults and recharacterize')
-                for key,lim in limits.items():
-                    if key not in p or not isinstance(lim,(tuple,list)) or len(lim)!=2:continue
-                    val=float(p[key]);lo,hi=lim
+                for key,limits_range in limits.items():
+                    if key not in p or not isinstance(limits_range,(tuple,list)) or len(limits_range)!=2:continue
+                    val=float(p[key]);lo,hi=limits_range
                     if (lo is not None and val<lo*(1-1e-12)) or (hi is not None and val>hi*(1+1e-12)):errors.append(label+': '+key+' outside declared model domain')
                 if 'nf' in p and (p['nf']<1 or p['nf']!=int(p['nf'])):errors.append(label+': nf must be positive integer')
             for key in ['c','r','l','w','m']:
@@ -211,20 +205,13 @@ def emit_tb(graph,project):
     lines.append('DUT ('+' '.join(pinmap.get(x['name'],x['name']) for x in graph['ports'])+') '+graph['name'])
     temp=p.get('temp_c',27);harms=int(settings.get('harmonics',15));tstab=settings.get('tstab_ns',60);guess=p['frequency_guess_ghz']
     lines.append('opts options temp='+str(temp)+' tnom=27 reltol='+str(settings.get('reltol',1e-4))+' save=selected')
-    reference=get_variant(project['family'],project['variant'])
-    cm=vdc if project['family']=='guo' else vdd*.5 if project['family'] in ['lim','murphy','du'] and project['variant']!='nmos' else vdd
-    # start-up kick in the oscillating mode, centred on each node's DC bias (docs/METHODS.md §4). Fixed template
-    # numbers are not used: the bias moves during sizing (Guo gate = vdc), and a multi-core must be kicked in its
-    # oscillating mode (Du: N2 with OUTP, N1 with OUTN), otherwise the DC-consistent IC excites only a decaying mode.
-    rule=IC_RULES.get(project['family'])
-    if rule:
-        ref={'cm':cm,'vdd':vdd,'vdc':vdc}
-        lines.append('ic '+' '.join(node+'='+format_number(ref[base]+sign*.0005) for node,(base,sign) in rule.items()))
+    initial = settings.get('initial_conditions', {})
+    if initial:
+        lines.append('ic ' + ' '.join(node.replace('I22.', 'DUT.') + '=' + format_number(value)
+                                     for node, value in initial.items()))
     else:
-        initial=settings.get('initial_conditions',{})
-        if initial:
-            lines.append('ic '+' '.join(k.replace('I22.','DUT.')+'='+format_number(val) for k,val in initial.items()))
-        else:lines.append('ic OUTP='+format_number(cm+.0005)+' OUTN='+format_number(cm-.0005))
+        # Both tank outputs are at VDD in the DC operating point.
+        lines.append('ic OUTP=' + format_number(vdd + .0005) + ' OUTN=' + format_number(vdd - .0005))
     lines.extend(['dcOp dc','dcOpInfo info what=oppoint where=rawfile',
         'hb (OUTP OUTN) hb oscic=lin tstab='+str(tstab)+'n saveinit='+saveinit+' autosteady=yes fundfreqs=['+str(guess)+'G] maxharms=['+str(harms)+'] errpreset=conservative oscmethod=onetier restart=yes annotate=status tstabmethod=gear2only',
         'hbnoise (OUTP OUTN) hbnoise sweeptype=relative relharmvec=[1] start=10k stop=10M dec=1 maxsideband='+str(harms)+' noiseout=[pm] annotate=status',
@@ -255,7 +242,7 @@ def generate(project,output_dir):
         (tmp/'circuit.scs').write_text(circuit)
         (tmp/'tb.scs').write_text(tb)
         (tmp/'models.scs').write_text('\n'.join(includes)+'\n')
-        (tmp/'README.md').write_text('# '+project['family']+' / '+project['variant']+'\n\nGenerated from one shared graph. main and aux are independent static bit inputs; bank switches/inverters are PDK devices. No auxiliary register exists for fixed/auto-tracking families.\n\nModel includes and transistor geometry are seed values; native binding and current-condition AC/HB/noise verification are separate. Fixed 50 fF is preserved. TB bias source is explicit and power must include VDD, bias and active control sources. A changed bit width invalidates historical LUT/performance.\n\nUse the Studio `simulate` command for isolated execution; never overwrite this evidence directory.\n')
+        (tmp/'README.md').write_text('# '+project['family']+' / '+project['variant']+'\n\nGenerated from one shared graph. Tuning registers are static bit inputs. Bank switches and inverters use PDK devices.\n\nModel includes and transistor geometry are seed values; native binding and current-condition AC/HB/noise verification are separate. TB bias source is explicit and power must include VDD, bias and active control sources. A changed bit width invalidates historical LUT/performance.\n\nUse the Studio `simulate` command for isolated execution; never overwrite this evidence directory.\n')
         files={f.name:sha256(f) for f in tmp.iterdir() if f.is_file()}
         physical_parameters={k:v for k,v in project['parameters'].items() if k!='frequency_guess_ghz'}
         condition={'parameters':physical_parameters,'register_widths':{k:v['bits'] for k,v in project['registers'].items()},'binding':binding}

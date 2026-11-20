@@ -15,7 +15,7 @@ from vco_studio.integrations import optimize, z11_analyze, caplab_analyze
 def main():
     dest = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(str(__import__('vco_studio.site', fromlist=['x']).runs_root() / ('validation/tools-' + datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S'))))
     dest.mkdir(parents=True, exist_ok=False)
-    project = default_project('murphy', 'nmos')
+    project = default_project('class_b', 'nmos')
     manifest = generate(project, dest / 'generated')
     def analytic_evaluator(candidate, directory):
         # Deliberately labelled contract fixture. It exercises real external circuit optimizer search

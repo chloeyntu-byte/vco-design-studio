@@ -26,13 +26,13 @@ class FlowTests(unittest.TestCase):
     def test_add_candidate_rejects_explicit_requirements_conflict(self):
         for parameters,registers in [({'vdd':.9},{}),({}, {'main':{'bits':5}})]:
             with self.assertRaisesRegex(ValueError,'conflicts'):
-                flow.add_candidate(self.root,{'family':'murphy','variant':'nmos','parameters':parameters,'registers':registers})
+                flow.add_candidate(self.root,{'family':'class_b','variant':'nmos','parameters':parameters,'registers':registers})
         self.assertEqual(read_json(self.root/'task.json')['candidates'],[])
         self.assertFalse((self.root/'candidates').exists())
 
     def test_add_candidate_inherits_task_requirements_before_real_generation(self):
         self.state['spec'].update(vdd=.9,main_bits=3);write_json(self.root/'task.json',self.state)
-        row=flow.add_candidate(self.root,{'family':'murphy','variant':'nmos'})
+        row=flow.add_candidate(self.root,{'family':'class_b','variant':'nmos'})
         project=read_json(Path(row['directory'])/'project.json')
         self.assertEqual(project['parameters']['vdd'],.9)
         self.assertEqual(project['registers']['main']['bits'],3)
@@ -120,3 +120,66 @@ class ExistingRealEvidenceTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+
+class CatalogRecommendationsTests(unittest.TestCase):
+    def test_phase_noise_guidance_offers_the_other_class_b_variant(self):
+        from vco_studio.guidance import noise_actions
+
+        spec = {'pdk': 'demo_a', 'allow_aux': False, 'evidence_indexes': [],
+                'pn_targets_dbc_hz': {'1000000': -110}}
+        metrics = {'frequency_hz': 10e9, 'power_mw': 3, 'pn_1000000_dbc_hz': -100}
+        for current, other in (('nmos', 'tail'), ('tail', 'nmos')):
+            with self.subTest(variant=current):
+                actions = noise_actions(default_project('class_b', current), metrics, spec, '.')
+                self.assertEqual(actions['failed_offsets_hz'], [1000000])
+                self.assertEqual(actions['comparisons']['1000000']['status'], 'unknown')
+                candidate, = actions['mechanism_candidates']
+                self.assertEqual(candidate['prepare_argv'][:5],
+                                 ['./launch', 'project', 'class_b', '--variant', other])
+
+    def test_lookup_ranks_only_available_variants_and_advises_on_the_pair(self):
+        from unittest.mock import patch
+        from vco_studio import advisor, select
+
+        cell = {'pdk': 'demo_a', 'family': 'class_b', 'variant': 'tail',
+                'f0_hz': 10e9, 'p_cap_mw': 3}
+        evaluation = {'status': 'pass', 'fom_1m_worst': 185, 'pn_1m_worst': -110,
+                      'tr_pct': 20, 'p_max_mw': 3}
+        rows = [
+            {'cell': cell, 'status': 'pass', 'evaluation': evaluation},
+            {'cell': dict(cell, variant='nmos'), 'status': 'pass',
+             'evaluation': dict(evaluation, fom_1m_worst=178)},
+            {'cell': dict(cell, family='external'), 'status': 'pass',
+             'evaluation': dict(evaluation, fom_1m_worst=200)},
+        ]
+        spec = {'pdk': 'demo_a', 'frequency_band_hz': [9.5e9, 10.5e9], 'power_max_mw': 3,
+                'pn_targets_dbc_hz': {'1000000': -109}, 'allow_aux': False}
+        with patch.object(select, 'table_results', return_value=rows):
+            ranking = select.rank('demo_a', 10e9, 3, allow_aux=False)
+            hint = advisor._upgrade_hint(spec, {'family': 'class_b', 'variant': 'nmos'},
+                                         {'metrics': {'fom_1000000_db': 175}})
+        self.assertEqual([(r['family'], r['variant']) for r in ranking],
+                         [('class_b', 'tail'), ('class_b', 'nmos')])
+        self.assertEqual(hint['detail']['table_current_family']['variant'], 'nmos')
+        self.assertIn('--family class_b --variant tail', hint['suggestion'])
+
+    def test_seed_with_measured_tail_bias(self):
+        from unittest.mock import patch
+        from vco_studio import cli, select
+
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)
+            spec_path = path / 'spec.json'
+            write_json(spec_path, {'pdk': 'demo_a', 'frequency_band_hz': [9.5e9, 10.5e9],
+                                   'power_max_mw': 3})
+            args = cli.build_parser().parse_args(['seed', '--family', 'class_b', '--variant', 'tail',
+                                                  '--spec', str(spec_path), '--output', str(path / 'seed.json')])
+            seed = {'source': 'synthetic matching cell', 'parameters': {'vdc': 0.6},
+                    'overrides': {'VCO_ClassB_Tail/MB': {'l': 0.2e-6}}}
+            with patch.object(select, 'seed', return_value=seed):
+                project, code = cli.dispatch(args)
+            self.assertEqual(code, 0)
+            self.assertEqual(project['parameters']['vdc'], 0.6)
+            self.assertEqual(project['seed']['overrides_unscaled'], ['VCO_ClassB_Tail/MB'])
+            self.assertIn('retune it for the power target', project['seed']['note'])

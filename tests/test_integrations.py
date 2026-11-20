@@ -143,7 +143,7 @@ class RealToolTests(unittest.TestCase):
         from vco_studio.catalog import default_project
         from vco_studio.generator import generate
         directory = self.root / 'real-generated'
-        generate(default_project('murphy', 'nmos'), directory)
+        generate(default_project('class_b', 'nmos'), directory)
         return directory, [{'parameter_id': 'L_scale', 'minimum': .9, 'maximum': 1.1}]
 
     @unittest.skipUnless(api.TOOL_ROOTS['optimizer'].is_dir(), 'Optional external optimizer tool not configured')

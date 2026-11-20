@@ -111,7 +111,7 @@ def from_result(result_path,pdk,architecture=None,real_bank=None,q_at_f0=None,co
         'source':{'run_dir':str(path.parent),'input':str(path.parent/'tb.scs'),'receipt':str(path.parent/'receipt.json'),'hashes':dict(r.get('evidence',{}),**{'result.json':sha256(path)})},
         'result_path':str(path),'status':r['status'],'qualification':r.get('qualification','failed_sample'),'convergence':convergence or {'status':'unknown'},'notes':r.get('warnings',[])}
 
-def query(paths,pdk=None,frequency_hz=None,power_mw=None,vdd_v=None,temp_c=None,main_bits=None,offset=1000000,frequency_tolerance=.03,power_tolerance=.10,architecture=None,band_files=None,variant=None):
+def query(paths,pdk=None,frequency_hz=None,power_mw=None,vdd_v=None,temp_c=None,main_bits=None,offset=1000000,frequency_tolerance=.03,power_tolerance=.10,architecture=None,band_files=None,variant=None,eligible_variants=None):
     pdk_original=pdk
     if pdk is not None:
         pdk=canonical_pdk(pdk)
@@ -125,6 +125,8 @@ def query(paths,pdk=None,frequency_hz=None,power_mw=None,vdd_v=None,temp_c=None,
     if architecture is not None:architecture=str(architecture).lower()
     rows=load_points(paths);matched=[];excluded=[];unqualified=[];offset=str(int(offset));hash_cache={};near=[];unavailable=0
     for r in rows:
+        if eligible_variants is not None and (r.get('architecture'), r.get('variant')) not in eligible_variants:
+            continue
         reasons=[]
         for key,want in [('pdk',pdk),('architecture',architecture),('variant',variant),('vdd_v',vdd_v),('temp_c',temp_c),('main_bits',main_bits)]:
             if want is not None and r.get(key)!=want:reasons.append(key)

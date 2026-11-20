@@ -299,7 +299,7 @@ class ConceptViewer(ttk.Frame):
         c = self.canvas
         c.delete('all')
         self.factor = 1
-        family, variant = self.model['family'], self.model['variant']
+        variant = self.model['variant']
         components = self.model['components']
         names = {item['name']: item for item in components}
         wire = fw.SERIES[0]
@@ -313,40 +313,15 @@ class ConceptViewer(ttk.Frame):
             return c.create_text(x, y, **kw)
         def line(*coords, color=wire, width=2, dash=None):
             return c.create_line(*coords, fill=color, width=width, dash=dash or ())
-        # These are layout coordinates only. Every component endpoint below is
-        # read from the shared graph, including floating MID/T1/T2 and bias nets.
-        if family in ('hegazi', 'murphy') and not (family == 'murphy' and variant == 'cmos'):
-            upper = 'TOP' if variant == 'top' else 'VDD'
-            nodes = {upper:(500,120), 'OUTP':(270,260), 'OUTN':(730,260), 'S':(500,500), 'BIAS':(380,610), 'VSS':(500,710), 'VDC':(130,615)}
-            if upper == 'TOP':
-                nodes['VDD'] = (500,35)
-            mos = {'MN1':(270,430,1), 'MN2':(730,430,1), 'MB':(380,665,1)}
-            if variant == 'top':
-                mos['MB'] = (500,75,-1)
-                nodes['VDC'] = (700,70)
-            notes = ('Explicit harmonic return at S; main and aux are independent.' if family == 'hegazi' else 'The coupled network supports differential fundamental and common harmonic modes; aux banks share one control.')
-            if family == 'murphy':
-                nodes['VSS'] = (500,650)
-        elif family == 'murphy':
-            nodes = {'VDD':(500,70),'UP':(260,250),'UN':(740,250),'MID':(500,400),'OUTP':(260,550),'OUTN':(740,550),'VSS':(500,725)}
-            mos = {'MP1':(260,160,-1),'MP2':(740,160,-1),'MN1':(260,640,1),'MN2':(740,640,1)}
-            notes = 'Complementary cores and four windings; MID floats. Main banks share main controls; grounded banks share aux.'
-        elif family == 'lim':
-            nodes = {'VDD':(260,70),'VSS':(740,720),'DP':(260,240),'DN':(740,240),'MID':(500,395),'OUTP':(260,550),'OUTN':(740,550)}
-            mos = {'MP':(260,150,-1),'MN':(740,640,1)}
-            notes = 'Drain-gate magnetic feedback; OUTP–OUTN is the fundamental port. Observe the harmonic at drain DP–DN.'
-        elif family == 'guo':
-            nodes = {'VDD':(750,65),'AUX':(350,65),'HEAD':(500,195),'DP':(260,340),'DN':(740,340),'VDC':(500,455),'OUTP':(260,485),'OUTN':(740,485),'VSS':(500,720)}
-            mos = {'MN1':(260,620,1),'MN2':(740,620,1)}
-            notes = 'Fixed head branches: LH1→AUX→CH→VDD and LH2→VDD, magnetically coupled. AUX is an internal net; main is the only control.'
-        else:
-            nodes = {'VDD':(500,65),'OUTP':(260,245),'OUTN':(740,245),'T1':(360,395),'T2':(640,395),'N1':(260,550),'N2':(740,550),'VSS':(500,730)}
-            mos = {'MP1':(260,155,-1),'MP2':(740,155,-1),'MN1':(260,640,1),'MN2':(740,640,1)}
-            notes = 'Two cores share main controls for tracking. CCA/CCB compensate across cores; RREJ damps the unwanted mode between T1–T2.'
-        text(24, 20, family.upper() + ' / ' + variant, anchor='nw', title=True)
+        # The two variants share the tank and core. Only the tail variant uses S and VDC.
+        nodes = {'VDD': (500, 105), 'OUTP': (270, 260), 'OUTN': (730, 260),
+                 'S': (500, 535), 'VDC': (330, 625), 'VSS': (500, 720)}
+        mos = {'MN1': (270, 450), 'MN2': (730, 450), 'MB': (500, 625)}
+        text(24, 20, 'Class-B / ' + variant, anchor='nw', title=True)
         self.description.configure(state='normal')
         self.description.delete('1.0', 'end')
-        self.description.insert('1.0', notes + '\nmain: tuning; aux: independent harmonic control where present. Coupling signs and values follow the graph.\nSimplified: bulk terminals, digital wires and coil losses omitted. Crossing lines need a dot to connect. Circuit graph is authoritative.')
+        self.description.insert('1.0', 'Main: differential tuning bank. Dashed lines show winding coupling.\n'
+                                'The diagram omits bulk terminals, digital wires and winding losses.')
         self.description.configure(state='disabled')
         positions = {}
         def branch(item, a, b, offset=0):
@@ -391,39 +366,31 @@ class ConceptViewer(ttk.Frame):
                 continue
             key=tuple(sorted(pair));index=repeated.get(key,0);repeated[key]=index+1
             offset = index*65
-            # Main and aux arrays span the real endpoint pair; no invented returns.
-            if family in ('murphy','hegazi') and pair in (('OUTP','OUTN'),('OUTN','OUTP')):
-                offset = 45 + index*65
-            if family=='du' and item['name'] in ('ICTA','ICTB'):
-                offset = 145 if item['name']=='ICTA' else -145
-            if family=='du' and item['name'] in ('C0','C0B'):
-                offset = 95 if item['name']=='C0' else -95
-            if item['name'] == 'CB':
-                offset = -80
-            if family == 'du' and item['name'] in ('CCA', 'CCB'):
-                offset = 65 if item['name'] == 'CCA' else -65
+            if key == ('OUTN', 'OUTP'):
+                offset = -45 + index * 90
             branch(item,nodes[pair[0]],nodes[pair[1]],offset)
         # Active devices: real gate net is printed at gate lead. A thin routed
         # wire makes the cross-coupling / drain-gate feedback explicit.
-        for name,(x,y,orientation) in mos.items():
+        for name,(x,y) in mos.items():
             item=names.get(name)
             if not item:
                 continue
             d,g,s=(item['nodes'][p] for p in ('d','g','s'))
-            dpoint=(x,y-orientation*38);spoint=(x,y+orientation*38)
+            dpoint=(x,y-38);spoint=(x,y+38)
             line(x-8,y-23,x-8,y+23);line(x-17,y-23,x-17,y+23)
             line(x-8,y-18,x,y-18,x,y-38);line(x-8,y+18,x,y+18,x,y+38)
             line(x-17,y,x-50,y)
-            if item['role']=='pmos':
-                c.create_oval(x-29,y-5,x-19,y+5,fill='white',outline=wire,width=2)
             for net,point in ((d,dpoint),(s,spoint)):
                 target=nodes[net]
                 line(*point,*target)
             gx,gy=nodes[g]
             # Gate feedback routed on the outside of the associated half-plane.
-            route=110 if x<500 else 890
-            gate_level = gy - 35 if x < 500 else gy + 35
-            line(x-50,y,route,y,route,gate_level,gx,gate_level,gx,gy,color=fw.SERIES[4],width=1)
+            if g == 'VDC':
+                line(x-50, y, gx, gy, color=fw.SERIES[4], width=1)
+            else:
+                route = 110 if x < 500 else 890
+                gate_level = gy - 35 if x < 500 else gy + 35
+                line(x-50,y,route,y,route,gate_level,gx,gate_level,gx,gy,color=fw.SERIES[4],width=1)
             text(x+23,y,name+' '+item['role'],anchor='w')
             text(x-50,y-18,'g='+g,color=fw.SERIES[4],anchor='e')
         for item in components:

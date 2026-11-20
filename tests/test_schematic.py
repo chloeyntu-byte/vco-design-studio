@@ -1,8 +1,14 @@
 import copy
 import os
+import tempfile
 import unittest
+from contextlib import ExitStack
+from unittest.mock import patch
 from pathlib import Path
 
+from synthetic_topology import use_two_banks
+from vco_studio.catalog import list_families
+from vco_studio.common import write_json
 from vco_studio import schematic as S
 from vco_studio import topology_view as T
 
@@ -13,8 +19,7 @@ def _module(packaged, kind_prefix):
     return next(s for s in packaged['subcircuits'] if s['name'].startswith(kind_prefix))
 
 
-VARIANTS = [('hegazi', 'tail'), ('hegazi', 'top'), ('hegazi', 'voltage'), ('murphy', 'nmos'), ('murphy', 'cmos'),
-            ('lim', 'inverse_f'), ('guo', 'wideband'), ('du', 'autotracking'), ('class_b', 'nmos'), ('class_b', 'tail')]
+VARIANTS = [(family['id'], variant['id']) for family in list_families() for variant in family['variants']]
 
 
 class PackagingTest(unittest.TestCase):
@@ -30,7 +35,7 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual(sorted(sym['pins']), sorted(p['name'] for p in sub['ports']))
 
     def test_equivalence_detects_changes(self):
-        r = S.prepare('lim', 'inverse_f')
+        r = S.prepare('class_b', 'tail')
         p = copy.deepcopy(r['packaged'])
         xf = _module(p, 'IND')
         next(i for i in xf['instances'] if i['role'] == 'ind')['nodes']['n'] = 'OUTN'
@@ -42,7 +47,7 @@ class PackagingTest(unittest.TestCase):
         self.assertFalse(S.equivalence(r['graph'], p, r['spec'])['equivalent'])
 
     def test_equivalence_scopes_internal_nets_and_hierarchy_parameters(self):
-        r = S.prepare('hegazi', 'tail')
+        r = S.prepare('class_b', 'tail')
         p = copy.deepcopy(r['packaged'])
         gm = _module(p, 'GM')
         gm['ports'] = [x for x in gm['ports'] if x['name'] != 'OUTP']
@@ -76,7 +81,7 @@ class PackagingTest(unittest.TestCase):
         self.assertTrue(S.equivalence(mk({}, {'base': 2000, 'r': 'base'}), mk({}, {'r': 'base', 'base': 2000}), {})['equivalent'])
         self.assertTrue(S.equivalence(mk({'base': 1000}, {'r': 'base+1k'}), mk({}, {'r': 2000}), {})['equivalent'])
         self.assertFalse(S.equivalence(mk({}, {'r': 'undefined_name'}), mk({}, {'r': 'undefined_name'}), {})['equivalent'])
-        r = S.prepare('hegazi', 'tail')
+        r = S.prepare('class_b', 'tail')
         p = copy.deepcopy(r['packaged'])
         p['ports'] = [x for x in p['ports'] if x['name'] != 'VDC']
         self.assertFalse(S.equivalence(r['graph'], p, r['spec'])['equivalent'])
@@ -88,18 +93,30 @@ class PackagingTest(unittest.TestCase):
                 with self.subTest(variant=fam + '/' + var, bits=bits):
                     p = default_project(fam, var)
                     p['registers']['main'].update(bits=bits, value=0)
-                    if 'aux' in p['registers']:
-                        p['registers']['aux'].update(bits=bits, value=0)
                     r = S.prepare(fam, var, project=p)
                     self.assertTrue(r['ok'], {k: v['errors'][:2] for k, v in r['connectivity']['cells'].items() if not v['ok']})
 
+    def test_packaging_resizes_independent_controls_on_synthetic_graph(self):
+        from vco_studio.catalog import default_project
+        with ExitStack() as stack:
+            use_two_banks(stack)
+            project = default_project('class_b', 'tail')
+            project['registers'].update(main={'bits': 5, 'value': 0}, aux={'bits': 2, 'value': 0})
+            result = S.prepare('class_b', 'tail', project=project)
+        self.assertTrue(result['ok'], result['equivalence'])
+        self.assertEqual({r['name']: r['bits'] for r in result['graph']['registers']},
+                         {'main': 5, 'aux': 2})
+
     def test_mutual_cannot_cross_module(self):
-        spec = S.load_spec('hegazi', 'tail')
+        spec = S.load_spec('class_b', 'tail')
         spec = copy.deepcopy(spec)
-        spec['modules'][0]['members'].remove('KDADB')
         from vco_studio.catalog import get_variant
-        with self.assertRaises(ValueError):
-            S.package_variant(get_variant('hegazi', 'tail')['graph'], spec)
+        graph = get_variant('class_b', 'tail')['graph']
+        coupling = next(i for i in graph['instances'] if i['role'] == 'mutual')
+        module = next(m for m in spec['modules'] if coupling['name'] in m['members'])
+        module['members'].remove(coupling['name'])
+        with self.assertRaisesRegex(ValueError, 'crosses the boundary'):
+            S.package_variant(graph, spec)
 
     def test_connectivity_rules(self):
         inst = [{'name': 'A', 'nodes': {'p': 'X'}, 'pins': {'p': (0, 0)}}, {'name': 'B', 'nodes': {'p': 'Y'}, 'pins': {'p': (1, 0)}}]
@@ -153,11 +170,20 @@ class TopologyDrawingTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             T.check_ui('class_b', 'nmos', spec)
 
-    def test_papers_listed_for_each_family(self):
-        for fam, var in VARIANTS:
-            if fam == 'class_b':
-                continue
-            self.assertTrue(T.papers_for(fam, var), fam + '/' + var)
+    def test_papers_filter_by_family_and_variant(self):
+        for family, variant in VARIANTS:
+            self.assertEqual(T.papers_for(family, variant), [])
+        figure = {'file': 'sample.png', 'variants': ['tail']}
+        paper = {'id': 'sample', 'family': 'class_b', 'citation': 'Synthetic index fixture',
+                 'doi': '10.0000/example', 'figures': [figure]}
+        with tempfile.TemporaryDirectory() as folder, patch.object(T, 'PAPERS', Path(folder)):
+            write_json(Path(folder) / 'index.json', {'schema': 'vco.papers.v1', 'papers': [paper]})
+            self.assertEqual(T.papers_for('class_b', 'nmos'), [])
+            self.assertEqual(T.papers_for('other', 'tail'), [])
+            match, = T.papers_for('class_b', 'tail')
+            self.assertEqual(match['file'], figure['file'])
+            self.assertEqual(match['citation'], paper['citation'])
+            self.assertEqual(match['doi'], paper['doi'])
 
 
 if __name__ == '__main__':

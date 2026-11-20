@@ -572,7 +572,7 @@ def sym_diff_inductor(ports=('P', 'N', 'CT'), rx=0.75, ry=0.75, legs=0.375, gap=
     return {'shapes': shapes, 'pins': pins}
 
 
-def sym_two_terminal_inductor(ports=('P', 'N'), title='LT'):
+def sym_two_terminal_inductor(ports=('P', 'N'), title='L'):
     """Single winding drawn as a vertical coil: P on top, N at bottom."""
     p, n = ports
     shapes = [{'t': 'line', 'pts': [[0, 0], [0, -0.125]], 'layer': 'device'},

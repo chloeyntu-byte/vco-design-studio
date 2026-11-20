@@ -84,7 +84,7 @@ def diagnose(result, spec, project=None, band=None):
         out.append({'code': 'AMP_LOW', 'detail': 'differential peak %.3f V < %.1f*%.2f V (%s core)' % (amp, AMP_LOW_FRAC, vmax, ctype),
                     'suggestion': 'current-limited or lossy tank: check bank off-state loading (bias resistor, switch size) with bank-ac, raise current if power allows, raise L (higher tank R)'})
     targets = {int(float(k)): v for k, v in (spec.get('pn_targets_dbc_hz') or {}).items()}
-    failed = [o for o, lim in targets.items() if _pn(m, o) is not None and _pn(m, o) > lim]
+    failed = [o for o, target in targets.items() if _pn(m, o) is not None and _pn(m, o) > target]
     if failed:
         gaps = {str(o): round(_pn(m, o) - targets[o], 2) for o in failed}
         pn100k, pn1m, pn10m = _pn(m, 100000), _pn(m, 1000000), _pn(m, 10000000)
@@ -92,26 +92,26 @@ def diagnose(result, spec, project=None, band=None):
         detail = {'gaps_db': gaps, 'slope_100k_1M_db_per_dec': None if slope is None else round(-slope, 2)}
         if slope is not None and (pn100k - pn1m) > FLICKER_SLOPE:
             out.append({'code': 'PN_FLICKER', 'detail': detail,
-                        'suggestion': 'flicker up-conversion dominates near the failing offset (1/f^3 region extends past 100 kHz): filter/decouple the tail (Hegazi tail filter, larger tail L, tail cap CB), use longer-L tail devices, reduce core device flicker (longer L), or move to a harmonic-shaping family'})
+                        'suggestion': 'flicker up-conversion dominates near the failing offset (1/f^3 region extends past 100 kHz): check core and tail noise contributions and test longer channel lengths where the binding permits'})
         else:
             out.append({'code': 'PN_THERMAL', 'detail': detail,
-                        'suggestion': 'thermal-noise limited (~20 dB/dec): raise tank Q / swing (higher L at same f, fewer lossy switches), spend available power, or upgrade to a family with higher measured FoM for this cell (launch select)'})
+                        'suggestion': 'thermal-noise limited (~20 dB/dec): raise tank Q / swing (higher L at same f, fewer lossy switches), spend available power or compare catalog variants at the same operating point (launch select)'})
         nc = (result.get('noise_contributors_1m') or {}).get('classes') or {}
         if nc:
             dom = max(nc.items(), key=lambda kv: kv[1]['share'])
             table = {k: '%.0f%% (flicker %.0f%%)' % (v['share'] * 100, v['flicker_share'] * 100) for k, v in sorted(nc.items(), key=lambda kv: -kv[1]['share'])}
             if dom[0] == 'tail' and dom[1]['share'] > 0.4:
                 out.append({'code': 'PN_TAIL', 'detail': {'contributors_1m': table},
-                            'suggestion': 'tail current source dominates PN@1MHz' + (' (mostly flicker)' if dom[1]['flicker_share'] > 0.5 else '') + ': add/enlarge the tail filter cap (CB), lengthen the tail device (legal L), or use a tail-filtered family'})
+                            'suggestion': 'tail current source dominates PN@1MHz' + (' (mostly flicker)' if dom[1]['flicker_share'] > 0.5 else '') + ': test a longer tail device or compare the direct-source variant at matched frequency and power'})
             elif dom[0] == 'bank' and dom[1]['share'] > 0.3:
                 out.append({'code': 'PN_BANK', 'detail': {'contributors_1m': table},
-                            'suggestion': 'switched-bank devices/bias resistors dominate: larger bias resistors, smaller switch Ron*C, fewer active units (check with bank-ac); for the aux/tail bank re-tune the aux code'})
+                            'suggestion': 'switched-bank devices/bias resistors dominate: larger bias resistors, smaller switch Ron*C, fewer active units (check with bank-ac)'})
             elif dom[0] == 'core' and dom[1]['share'] > 0.5:
                 out.append({'code': 'PN_CORE', 'detail': {'contributors_1m': table},
-                            'suggestion': 'core devices dominate' + (' with large flicker share: longer-L core devices or a harmonic-shaping family' if dom[1]['flicker_share'] > 0.4 else ': raise tank swing/Q (L up), avoid deep triode, check gm margin is not excessive')})
+                            'suggestion': 'core devices dominate' + (' with large flicker share: test longer channel lengths' if dom[1]['flicker_share'] > 0.4 else ': raise tank swing/Q (L up), avoid deep triode, check gm margin is not excessive')})
             elif dom[0] == 'tank_loss' and dom[1]['share'] > 0.4:
                 out.append({'code': 'PN_TANK', 'detail': {'contributors_1m': table},
-                            'suggestion': 'tank loss dominates: magnetics Q is the limit (Q <= 30 rule at f0); raise swing or move to a higher-FoM family'})
+                            'suggestion': 'tank loss dominates: magnetics Q is the limit (Q <= 30 rule at f0); check whether swing can be increased within the power and voltage limits'})
         if pw < 0.7 * pmax:
             out.append({'code': 'P_HEADROOM', 'detail': 'P=%.3f mW uses only %.0f %% of the budget while PN fails' % (pw, pw / pmax * 100),
                         'suggestion': {'current_scale_up_to': round(pmax / pw * 0.95, 3)}})
@@ -261,19 +261,21 @@ def _upgrade_hint(spec, cand, result):
     ranking = [r for r in rank(spec.get('pdk'), f0, p, targets[1000000], allow_aux=spec.get('allow_aux', True)) if r.get('fom_1m_worst')]
     if not ranking:
         return {'code': 'UPGRADE_UNKNOWN', 'detail': 'no lookup-table cells for this PDK', 'suggestion': 'use evidence-query near_misses and the architecture cards'}
-    mine = next((r for r in ranking if r['family'] == cand.get('family')), None)
+    current = (cand.get('family'), cand.get('variant'))
+    mine = next((r for r in ranking if (r['family'], r['variant']) == current), None)
     best = ranking[0]
     detail = {'needed_fom_at_full_power': round(need_fom, 2), 'measured_fom': round(m['fom_1000000_db'], 2),
               'table_best': {k: best.get(k) for k in ('family', 'variant', 'fom_1m_worst', 'nearest_cell', 'margin_db')},
-              'table_current_family': {k: mine.get(k) for k in ('fom_1m_worst', 'nearest_cell', 'margin_db')} if mine else None}
+              'table_current_family': {k: mine.get(k) for k in ('family', 'variant', 'fom_1m_worst', 'nearest_cell', 'margin_db')} if mine else None}
     reach = lambda r: r['fom_1m_worst'] >= need_fom - 0.5
     if mine and reach(mine) and m['fom_1000000_db'] < mine['fom_1m_worst'] - 1.0:
-        sug = 'keep the family: the table shows %s reaching %.1f dB FoM near this cell (need %.1f, measured %.1f); move toward the table design (`launch seed --task <task> --family %s`)' % (cand.get('family'), mine['fom_1m_worst'], need_fom, m['fom_1000000_db'], cand.get('family'))
-    elif reach(best) and best['family'] != cand.get('family'):
-        sug = 'structure upgrade: %s/%s reaches %.1f dB FoM near this cell (need %.1f; this family %s); seed it with `launch seed --task <task> --family %s --variant %s`' % (
-            best['family'], best['variant'], best['fom_1m_worst'], need_fom, ('%.1f in the table' % mine['fom_1m_worst']) if mine else 'not in the table', best['family'], best['variant'])
+        sug = 'seed the current variant (%.1f dB nearby, need %.1f, measured %.1f): launch seed --task <task> --family %s --variant %s' % (
+            mine['fom_1m_worst'], need_fom, m['fom_1000000_db'], *current)
+    elif reach(best) and (best['family'], best['variant']) != current:
+        sug = 'compare %s/%s (%.1f dB nearby, need %.1f): launch seed --task <task> --family %s --variant %s' % (
+            best['family'], best['variant'], best['fom_1m_worst'], need_fom, best['family'], best['variant'])
     elif mine and m['fom_1000000_db'] < mine['fom_1m_worst'] - 1.0:
-        sug = 'tune toward the table design (%.1f dB possible vs measured %.1f), but no family reaches the needed %.1f dB near this cell: agree a relaxed PN/power with the requester or report the gap' % (mine['fom_1m_worst'], m['fom_1000000_db'], need_fom)
+        sug = 'tune toward the table design (%.1f dB possible vs measured %.1f), but no catalog variant reaches the needed %.1f dB near this cell: agree a relaxed PN/power with the requester or report the gap' % (mine['fom_1m_worst'], m['fom_1000000_db'], need_fom)
     else:
-        sug = 'no family in the table reaches the needed FoM (%.1f dB) near this cell: relax PN or power with the requester, or spend budget on the best family (%s, %.1f dB) and report the gap' % (need_fom, best['family'], best['fom_1m_worst'])
+        sug = 'no catalog variant in the table reaches the needed FoM (%.1f dB) near this cell: relax PN or power with the requester, or spend budget on the best variant (%s/%s, %.1f dB) and report the gap' % (need_fom, best['family'], best['variant'], best['fom_1m_worst'])
     return {'code': 'UPGRADE_CHECK', 'detail': detail, 'suggestion': sug}

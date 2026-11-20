@@ -6,7 +6,11 @@ def list_families():
     return deepcopy(read_json(ROOT/'data/catalog.json')['families'])
 
 def list_reference_baselines():
-    return [{'id':'class_b','variants':[{'id':'nmos'},{'id':'tail'}],'qualification':'target-PDK measurement required'}]
+    return [
+        {'id': family['id'], 'variants': [{'id': variant['id']} for variant in family['variants']],
+         'qualification': 'target-PDK measurement required'}
+        for family in list_families()
+    ]
 
 def with_performance_reference(value):
     value['performance_lookup']={'owner':'shared measured evidence index; no duplicated numeric table',
@@ -15,14 +19,20 @@ def with_performance_reference(value):
     return value
 
 def get_variant(family,variant=None):
-    if family=='class_b':
-        if variant not in (None,'nmos','tail'):raise ValueError('Unknown reference baseline variant')
-        return with_performance_reference(read_json(ROOT/'data/baselines/class_b'/((variant or 'nmos')+'.json')))
     found=next((f for f in list_families() if f['id']==family),None)
     if found is None:raise ValueError('Unknown topology family: '+str(family))
     variant=variant or found['variants'][0]['id']
     if variant not in [v['id'] for v in found['variants']]:raise ValueError('Unknown family variant: '+str(variant))
-    return with_performance_reference(read_json(ROOT/'data/topologies'/family/(variant+'.json')))
+    return with_performance_reference(read_json(ROOT/'data/baselines'/family/(variant+'.json')))
+
+def available_variants(allow_aux=True):
+    return {
+        (family['id'], variant['id'])
+        for family in list_families()
+        for variant in family['variants']
+        if allow_aux or 'aux' not in get_variant(family['id'], variant['id'])['defaults']['registers']
+    }
+
 
 def resolve_binding_ref(binding):
     """Accept a binding path or a PDK name; return a path string usable by the generator."""
@@ -57,7 +67,8 @@ def default_project(family, variant=None, binding=None, spec=None):
         if vdd is not None and params.get('vdd') != vdd:
             params['vdd'] = float(vdd)
             inherited.append('vdd')
-            out_notes.append('vdc (bias) kept from the template; it sets the current: retune it for the power target, or start from `launch seed`')
+            if any(port['name'] == 'VDC' for port in v['graph']['ports']):
+                out_notes.append('vdc (bias) kept from the template; it sets the current: retune it for the power target, or start from `launch seed`')
         temp = (spec or {}).get('temp_c', 27)
         if params.get('temp_c') != temp:
             params['temp_c'] = temp

@@ -97,7 +97,7 @@ def _init_locked(spec,warnings,cards,workspace):
     write_json(root/'task.json',state)
     write_json(root/'candidate_catalog.json',list_families())
     if not (root/'DECISIONS.md').exists():
-        (root/'DECISIONS.md').write_text('# Design decisions\n\nFor every decision write: evidence/knowledge IDs and their conditions -> hypothesis -> this experiment -> keep/reject and why.\nThe catalog is a shortlist source; testing all five families is not required.\n')
+        (root/'DECISIONS.md').write_text('# Design decisions\n\nFor every decision write: evidence/knowledge IDs and their conditions -> hypothesis -> this experiment -> keep/reject and why.\nUse the catalog to shortlist variants for the required operating conditions.\n')
     return status(root)
 
 

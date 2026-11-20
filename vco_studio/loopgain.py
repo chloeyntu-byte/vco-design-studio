@@ -8,7 +8,7 @@
             biased at the in-circuit terminal voltages) cancelled by AC-only (high-passed) VCCS, so the DC point is
             unchanged; i.e. the loaded tank seen by the core (gds, device parasitics, bank, bias network kept).
    (Cancelling the intrinsic dcOpInfo gm at the terminals over-cancels by the rs/rg loss and, being DC-coupled, can
-    move the DC point of a cross-coupled pair; both errors were seen on Hegazi 10 GHz.)
+    move the DC point of a cross-coupled pair.)
 3. At f (default: the measured HB f0): Rp_diff = 1/Re(Y_off), G_loss = Re(Y_off), G_neg = G_loss - Re(Y_on),
    margin = G_neg / G_loss  (the documented flow targets margin ~2, i.e. gm_single * Rp_diff ~ 4 for a
    single cross-coupled pair; for CMOS/multi-core cores only the measured margin is meaningful).

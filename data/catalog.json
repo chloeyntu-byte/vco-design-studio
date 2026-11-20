@@ -2,69 +2,17 @@
   "schema": "vco.catalog.v1",
   "families": [
     {
-      "id": "hegazi",
-      "name": "Hegazi",
-      "summary": "Explicit harmonic return",
-      "variants": [
-        {
-          "id": "tail",
-          "name": "Tail"
-        },
-        {
-          "id": "top",
-          "name": "Top"
-        },
-        {
-          "id": "voltage",
-          "name": "Voltage"
-        }
-      ]
-    },
-    {
-      "id": "murphy",
-      "name": "Murphy",
-      "summary": "Implicit common-mode resonance",
+      "id": "class_b",
+      "name": "Class-B",
+      "summary": "Cross-coupled LC oscillator with a main tuning bank",
       "variants": [
         {
           "id": "nmos",
-          "name": "Nmos"
+          "name": "NMOS"
         },
         {
-          "id": "cmos",
-          "name": "Cmos"
-        }
-      ]
-    },
-    {
-      "id": "lim",
-      "name": "Lim",
-      "summary": "Inverse-F waveform shaping",
-      "variants": [
-        {
-          "id": "inverse_f",
-          "name": "Inverse f"
-        }
-      ]
-    },
-    {
-      "id": "guo",
-      "name": "Guo",
-      "summary": "Fixed broadband return",
-      "variants": [
-        {
-          "id": "wideband",
-          "name": "Wideband"
-        }
-      ]
-    },
-    {
-      "id": "du",
-      "name": "Du",
-      "summary": "Dual-core tracking",
-      "variants": [
-        {
-          "id": "autotracking",
-          "name": "Autotracking"
+          "id": "tail",
+          "name": "Tail-biased"
         }
       ]
     }

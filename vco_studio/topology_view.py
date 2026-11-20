@@ -2,7 +2,7 @@
 
 Each variant has `data/schematic/<family>/<variant>.ui.json`: device glyphs placed like the
 paper figure, wires, rail symbols and labels.  Every glyph names the schematic object it
-stands for (`ref`, e.g. "GM/MN1", "L_TANK", "CT_MAIN", "L_XFMR/LDA", "C0"); its terminal nets
+stands for (`ref`, e.g. "GM/MN1", "L_TANK", "CT_MAIN", "C0"); its terminal nets
 are looked up in the packaged graph, and the drawing is checked with the same connectivity
 extractor as the Virtuoso plan (schematic.connectivity_check).  So the UI drawing cannot show
 a connection the schematic does not have, and every top-level schematic object appears.
@@ -78,7 +78,7 @@ def _top_inst(packaged, name):
 
 
 def resolve_ref(packaged, ref):
-    """Return {graph terminal: top net} for a ref like 'GM/MN1', 'L_TANK', 'C0', 'L_XFMR/LDA'."""
+    """Return {graph terminal: top net} for a ref like 'GM/MN1', 'L_TANK', 'C0'."""
     subs = {s['name']: s for s in packaged['subcircuits']}
     parts = ref.split('/')
     inst = _top_inst(packaged, parts[0])
@@ -478,7 +478,10 @@ def _tk_viewer_class():
             except Exception:
                 self.packaged = None
             self.figures = papers_for(family, variant)
-            self.title.configure(text='%s / %s - topology after the source paper (labels = generated schematic instance paths)' % (family, variant))
+            title = '%s / %s' % (family, variant)
+            if self.figures:
+                title += ' - topology after the source paper'
+            self.title.configure(text=title + ' (labels = generated schematic instance paths)')
             names = ['%s  %s  p.%s' % (f['paper'], f['label'], f['pdf_page']) for f in self.figures]
             self.figure_box.configure(values=names)
             if self.spec and self.spec.get('figure'):

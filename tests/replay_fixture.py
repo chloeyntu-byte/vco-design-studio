@@ -18,7 +18,7 @@ def create_result(folder):
         "shutil.copy2(source/'noise.txt', 'psf/hbnoise.pm.pnoise_hbnoise')\n" +
         "Path('spectre.log').write_text('Synthetic replay; no circuit solved.\\n')\n")
     solver.chmod(0o700)
-    generate(default_project('murphy', 'nmos'), root / 'generated')
+    generate(default_project('class_b', 'nmos'), root / 'generated')
     result = run(root / 'generated', root / 'replay', solver=str(solver), env_script='/nonexistent')
     if result['status'] != 'measured':
         raise AssertionError(result)

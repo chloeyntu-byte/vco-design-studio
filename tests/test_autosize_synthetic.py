@@ -1,5 +1,6 @@
 """Autosize control flow against a synthetic oscillator model (no Spectre): it must converge to a
 passing design within budget, respect PDK legality, calibrate aux, and never crash."""
+from contextlib import ExitStack
 import math
 import sys
 import tempfile
@@ -10,6 +11,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from synthetic_topology import use_two_banks
 from vco_studio import autosize  # noqa: E402
 
 
@@ -22,7 +24,7 @@ def synthetic(project):
     c_fixed = 1.0
     c_bank = 3.0 * p['bank_cap_scale'] * (1 - 0.8 * frac)      # higher code -> less C -> higher f
     f = 30e9 / math.sqrt(p['L_scale'] * (c_fixed + c_bank))
-    knob = p['vdc'] if 'tail' in project['variant'] or project['family'] in ('guo', 'class_b') else p['core_width_scale']
+    knob = p['vdc'] if project['variant'] == 'tail' else p['core_width_scale']
     power = 8.0 * max(knob - 0.3, 0.02) ** 1.5 if knob < 2 else 3.0 * knob
     aux_pen = 0.0
     if 'aux' in regs:
@@ -57,8 +59,10 @@ class SyntheticAutosize(unittest.TestCase):
             rec = autosize.autosize(cell, tempfile.mkdtemp(prefix='synth-'), budget=budget, log=lambda *a: None)
         return rec, calls
 
-    def test_hegazi_tail_passes_with_aux_map(self):
-        rec, calls = self.run_cell('hegazi', 'tail')
+    def test_synthetic_second_bank_passes_with_aux_map(self):
+        with ExitStack() as stack:
+            use_two_banks(stack)
+            rec, calls = self.run_cell('class_b', 'tail')
         self.assertEqual(rec['status'], 'pass', rec.get('error') or rec.get('evaluation'))
         self.assertLessEqual(rec['sims_used'], 34)
         ev = rec['evaluation']
@@ -67,12 +71,12 @@ class SyntheticAutosize(unittest.TestCase):
         self.assertTrue(any(c.startswith('aux') for c in calls))
 
     def test_voltage_biased_family_uses_width_knob(self):
-        rec, _ = self.run_cell('du', 'autotracking', f0=20e9, p=10.0)
+        rec, _ = self.run_cell('class_b', 'nmos', f0=20e9, p=10.0)
         self.assertEqual(rec['power_knob'], 'core_width_scale')
         self.assertIn(rec['status'], ('pass', 'constraint_fail'))
 
     def test_budget_is_respected(self):
-        rec, calls = self.run_cell('murphy', 'nmos', budget=6)
+        rec, calls = self.run_cell('class_b', 'nmos', budget=6)
         self.assertLessEqual(len(calls), 6)
 
 
@@ -84,7 +88,7 @@ class ReviewRegressions(unittest.TestCase):
     """Codex review T-0081: mixed parameters, lost best design, center_tr in stages."""
 
     def test_realize_returns_the_measured_project(self):
-        cell = {'pdk': 'demo_a', 'family': 'hegazi', 'variant': 'tail', 'f0_hz': 10e9, 'p_cap_mw': 5.0, 'tr_min': 0.1, 'main_bits': 4}
+        cell = {'pdk': 'demo_a', 'family': 'class_b', 'variant': 'tail', 'f0_hz': 10e9, 'p_cap_mw': 5.0, 'tr_min': 0.1, 'main_bits': 4}
 
         class Ex:
             used, budget = 0, 99
@@ -100,12 +104,12 @@ class ReviewRegressions(unittest.TestCase):
         self.assertEqual(r['_vdc'], proj['parameters']['vdc'])
 
     def test_budget_exhaustion_keeps_best(self):
-        orig = autosize._aux_calibrate
-
         def boom(*a, **k):
             raise autosize.BudgetExhausted('budget')
-        with mock.patch.object(autosize, '_aux_calibrate', boom):
-            rec, _ = SyntheticAutosize.run_cell(self, 'hegazi', 'tail')
+        with ExitStack() as stack:
+            use_two_banks(stack)
+            stack.enter_context(mock.patch.object(autosize, '_aux_calibrate', boom))
+            rec, _ = SyntheticAutosize.run_cell(self, 'class_b', 'tail')
         self.assertTrue(rec.get('budget_exhausted'))
         self.assertIsNotNone(rec.get('design'))
         self.assertIn(rec['status'], ('pass', 'constraint_fail'))
@@ -137,7 +141,7 @@ class GainVariants(unittest.TestCase):
             seen.append(label)
             return {'gm_rp': 8.0 if label == 'base' else 4.2, 'valid': True, 'class': 'x'}
         with mock.patch.object(autosize, '_gain', fake_gain):
-            rec, _ = SyntheticAutosize.run_cell(self, 'hegazi', 'tail', budget=60)
+            rec, _ = SyntheticAutosize.run_cell(self, 'class_b', 'tail', budget=60)
         self.assertEqual(seen[0], 'base')
         self.assertTrue(any(v['variant'].startswith('gain_nominal') for v in rec['variants']))
         self.assertTrue(all('gain' in v for v in rec['variants']))
@@ -159,7 +163,7 @@ class Plan(unittest.TestCase):
 class TableRows(unittest.TestCase):
     def test_rows_have_four_offsets_and_gain(self):
         from vco_studio.select import table_rows, table_csv, table_markdown_full
-        rec, _ = SyntheticAutosize.run_cell(self, 'hegazi', 'tail', budget=40)
+        rec, _ = SyntheticAutosize.run_cell(self, 'class_b', 'tail', budget=40)
         rec['key'] = 'k'
         rows = table_rows([rec])
         r = rows[0]
@@ -167,12 +171,12 @@ class TableRows(unittest.TestCase):
             self.assertIsNotNone(r['fom_worst_%s' % o])
         self.assertEqual(sorted(r['codes']), [0, 8, 15])
         self.assertIn('fom_worst_10000', table_csv(rows).splitlines()[0])
-        self.assertIn('hegazi', table_markdown_full(rows))
+        self.assertIn('class_b', table_markdown_full(rows))
 
 
 class NoStartup(unittest.TestCase):
     def test_no_oscillation_raises_power_then_L(self):
-        cell = {'pdk': 'demo_a', 'family': 'hegazi', 'variant': 'tail', 'f0_hz': 10e9, 'p_cap_mw': 5.0, 'tr_min': 0.1, 'main_bits': 4}
+        cell = {'pdk': 'demo_a', 'family': 'class_b', 'variant': 'tail', 'f0_hz': 10e9, 'p_cap_mw': 5.0, 'tr_min': 0.1, 'main_bits': 4}
         seen = []
 
         class Ex:
